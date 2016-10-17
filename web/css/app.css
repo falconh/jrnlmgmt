@@ -1,0 +1,21 @@
+#loginComponent{
+    background-color: grey;
+    height: 100%;
+    width: 100%;
+}
+
+#mainSector{
+    height:100%;
+    width: 100%;
+}
+
+.maximumSize{
+    height: 100%;
+}
+
+#superVisionCard{
+}
+
+#loginCard{
+    width: 30%;
+}

@@ -1,0 +1,23 @@
+{
+  "name": "journal-management-web-interface",
+  "authors": [
+    "Han <wongfalcon@gmail.com>"
+  ],
+  "description": "Journal management system",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "^1.5.8",
+    "angular-material": "^1.1.1",
+    "angular-ui-router": "^0.3.1",
+    "angular-material-sidemenu": "^1.0.1"
+  }
+}

@@ -1,0 +1,35 @@
+<div class='maximumSize' ng-controller="MainDisplayCtrl" layout="row">
+    <md-sidenav class="md-sidenav-left maximumSize" 
+        md-component-id="left" 
+        md-is-locked-open="$mdMedia('gt-md')"
+        md-whiteframe="4" flex='20'>
+        <md-sidemenu>
+        <md-sidemenu-group>
+            <md-sidemenu-content md-heading="Supervision">
+                <md-sidemenu-button href="#" ng-repeat="student in students">{{student.STUDNT_NM}}</md-sidemenu-button>
+                <md-sidemenu-button href="#">All</md-sidemenu-button>
+                <md-sidemenu-button ng-click=showCreateStudentDialog($event)>
+                    <span style="font-weight:bolder">+ Create new supervision</span>
+                </md-sidemenu-button>
+            </md-sidemenu-content>
+        </md-sidemenu-group>
+        <md-divider></md-divider>
+        </md-sidemenu>
+    </md-sidenav>
+
+    <div layout="column" flex>
+        <div flex>
+            <md-toolbar class="md-hue-3">
+                <div class="md-toolbar-tools">
+                    <span>Journal Submission Planning</span>
+                </div>
+            </md-toolbar>
+
+            <md-content>
+                <md-list flex>
+                    <md-subheader class="md-no-sticky">
+                </md-list>
+            </md-content>
+        </div>
+    </div>
+</div>

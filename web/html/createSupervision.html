@@ -1,0 +1,46 @@
+<md-dialog id='superVisionCard' ng-controller="CreateSupervisionCtrl">
+    <form name="studentForm" ng-submit = 'submit()'>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>Create New Supervision</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                <md-icon md-svg-src="img/icons/ic_close_24px.svg" aria-label="Close dialog"></md-icon>
+                </md-button>
+            </div>
+        </md-toolbar>
+        <md-dialog-content>
+            <div class="md-dialog-content">
+                <md-input-container class="md-block">
+                    <label>Student ID</label>
+                    <input name='studentId' ng-model='student.studentId' required>
+                    <div ng-messages="studentForm.studentId.$error">
+                        <div ng-message='required'>This is required.</div>
+                    </div>
+                </md-input-container>
+
+                <md-input-container class="md-block">
+                    <label>Student Name</label>
+                    <input name='studentName' ng-model='student.studentName' required>
+                    <div ng-messages="studentForm.studentName.$error">
+                        <div ng-message='required'>This is required.</div>
+                    </div>
+                </md-input-container>
+
+                <md-input-container class="md-block">
+                    <label>Student Type</label>
+                    <md-select ng-model="student.studentType">
+                        <md-option ng-repeat="type in types" value={{type}}>{{type}}</md-option>
+                    </md-select>
+                    <div ng-messages="studentForm.studentType.$error">
+                        <div ng-message='required'>This is required.</div>
+                    </div>
+                </md-input-container>
+
+                <div>
+                    <md-button id='CreateSupervisionSubmit' class='md-raised md-primary' type="submit">Submit</md-button>
+                </div>
+            </div>
+        </md-dialog-content>
+        </form>
+</md-dialog>

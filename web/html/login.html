@@ -1,0 +1,38 @@
+<div id='loginComponent' layout="column" layout-align="center center" ng-controller="LoginCtrl">
+    <md-card id='loginCard'>
+        <md-card-header>
+            <md-toolbar>
+                    <div class="md-toolbar-tools">
+                        <h2>Authentication</h2>
+                        <span flex></span>
+                        <md-button class="md-icon-button" ng-click="cancel()">
+                        <md-icon md-svg-src="img/icons/ic_close_24px.svg" aria-label="Close dialog"></md-icon>
+                        </md-button>
+                    </div>
+                </md-toolbar>
+        </md-card-header>
+        <md-card-content>
+            <form name="login" ng-submit = 'submit()'>
+                <md-input-container class="md-block">
+                    <label>Username</label>
+                    <input name='username' ng-model='login.username.value' required>
+                    <div ng-messages="login.username.$error">
+                        <div ng-message='required'>This is required.</div>
+                    </div>
+                </md-input-container>
+
+                <md-input-container class="md-block">
+                    <label>Password</label>
+                    <input name='password' type='password' ng-model='login.password.value' required>
+                    <div ng-messages="login.password.$error">
+                        <div ng-message='required'>This is required.</div>
+                    </div>
+                </md-input-container>
+
+                <div>
+                    <md-button id='loginSubmit' class='md-raised md-primary' type="submit">Login</md-button>
+                </div>
+            </form>
+        </md-card-content>
+    </md-card>
+</div>
