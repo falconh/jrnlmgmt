@@ -15,7 +15,7 @@
             <form name="login" ng-submit = 'submit()'>
                 <md-input-container class="md-block">
                     <label>Username</label>
-                    <input name='username' ng-model='login.username.value' required>
+                    <input name='username' ng-model='loginUsername' required>
                     <div ng-messages="login.username.$error">
                         <div ng-message='required'>This is required.</div>
                     </div>
@@ -23,7 +23,7 @@
 
                 <md-input-container class="md-block">
                     <label>Password</label>
-                    <input name='password' type='password' ng-model='login.password.value' required>
+                    <input name='password' type='password' ng-model='loginPassword' required>
                     <div ng-messages="login.password.$error">
                         <div ng-message='required'>This is required.</div>
                     </div>

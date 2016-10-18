@@ -6,7 +6,7 @@
         <md-sidemenu>
         <md-sidemenu-group>
             <md-sidemenu-content md-heading="Supervision">
-                <md-sidemenu-button href="#" ng-repeat="student in students">{{student.STUDNT_NM}}</md-sidemenu-button>
+                <md-sidemenu-button href="#" ng-repeat="supervision in supervisions">{{supervision.student.studentName}}</md-sidemenu-button>
                 <md-sidemenu-button href="#">All</md-sidemenu-button>
                 <md-sidemenu-button ng-click=showCreateStudentDialog($event)>
                     <span style="font-weight:bolder">+ Create new supervision</span>

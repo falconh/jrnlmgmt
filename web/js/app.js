@@ -5,7 +5,10 @@ angular.module('myApp',['ngMaterial','ngMessages','ui.router','ngMaterialSidemen
     .primaryPalette('blue')
     .accentPalette('orange');
 })
-.config(['$stateProvider','$urlRouterProvider', function($stateProvider,$urlRouterProvider){
+.run(function($rootScope){
+    $rootScope.user = 0;
+})
+.config(['$stateProvider','$urlRouterProvider', function($stateProvider,$urlRouterProvider,$stateParams){
     var states = [
         {
             name : 'login',
@@ -19,7 +22,7 @@ angular.module('myApp',['ngMaterial','ngMessages','ui.router','ngMaterialSidemen
         },
         {
             name : 'mainProfile',
-            url : '/general',
+            url : '/general/:userID',
             views:{
                 main:{
                     templateUrl: 'html/mainProfile.html'
@@ -34,34 +37,75 @@ angular.module('myApp',['ngMaterial','ngMessages','ui.router','ngMaterialSidemen
         $stateProvider.state(state);
     });
 }])
-.controller('LoginCtrl',['$scope','$state', function($scope,$state){
+.controller('LoginCtrl',['$scope','$rootScope','$state','$stateParams','$http','$q','$location',
+function($scope,$state,$stateParams,$rootScope,$http,$q,$location){
 
-    $scope.login = {
-        username : '1234'
+
+    var broadcastSuccess = function(data){
+        $rootScope.user = $scope.user.userID ;
+        $location.path('/general/' + $rootScope.user);
     };
 
     $scope.submit = function(){
-        $state.go('mainProfile');
+        var loginReqBody = {
+            username : $scope.loginUsername,
+            password : $scope.loginPassword
+        }
+
+        $http(
+            {
+                method: 'POST',
+                url: 'http://localhost:8080/apis/login',
+                data : loginReqBody,
+                headers:{
+                    'Content-Type':'application/json'
+                }
+            }
+        )//.then(function successCallback(response,$rootScope,$injector){
+        .success(function(data){
+                
+                $scope.user = data;
+                //$state.go('mainProfile');
+                broadcastSuccess(data);
+        });
     };
 }])
-.controller('MainDisplayCtrl', ['$scope','$mdDialog', function($scope,$mdDialog){
-    $scope.students = [
-        {
-            STUDNT_ID : '1234',
-            STUDNT_NM : 'Calvin',
-            STUDNT_TYP: 'UNDERGRADUATE'
-        },
-        {
-            STUDNT_ID : '1235',
-            STUDNT_NM : 'OH REALLY',
-            STUDNT_TYP: 'UNDERGRADUATE'
-        },
-        {
-            STUDNT_ID : '1236',
-            STUDNT_NM : 'OH YEA',
-            STUDNT_TYP: 'POSTGRADUATE'
-        }
-    ];
+.controller('MainDisplayCtrl', ['$scope','$mdDialog','$http','$rootScope','$state','$stateParams',
+function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
+
+    var userID = $stateParams.userID;
+
+    var broadcastSuccess = function(data){
+        $rootScope.supervisions = data ;
+        console.log($rootScope.supervisions);
+    };
+
+    $rootScope.$on('NewUserCreated',function(){
+        $http(
+            {
+                method: 'GET',
+                url: 'http://localhost:8080/apis/supervision?userID=' + userID,
+            }
+        )//.then(function successCallback(response,$rootScope,$injector){
+        .success(function(data){
+                
+                $scope.supervisions = data;
+                broadcastSuccess(data);
+        });
+    });
+
+    $http(
+            {
+                method: 'GET',
+                url: 'http://localhost:8080/apis/supervision?userID=' + userID,
+            }
+        )//.then(function successCallback(response,$rootScope,$injector){
+        .success(function(data){
+                
+                $scope.supervisions = data;
+                broadcastSuccess(data);
+        });
+    
 
     $scope.months = [
         'January',
@@ -109,12 +153,16 @@ angular.module('myApp',['ngMaterial','ngMessages','ui.router','ngMaterialSidemen
                 templateUrl : 'html/CreateSupervision.html',
                 parent: angular.element(document.body),
                 targetEvent: ev,
-                clickOutsideToClose: true
+                clickOutsideToClose: true,
+                locals:{
+                    userID: userID
+                }
             }
         )
     };
 
-    function DialogController($scope, $mdDialog) {
+    function DialogController(userID, $scope,$rootScope, $mdDialog) {
+
 
         $scope.types =['Undergraduate','Postgraduate'];
         
@@ -129,7 +177,39 @@ angular.module('myApp',['ngMaterial','ngMessages','ui.router','ngMaterialSidemen
         $scope.answer = function(answer) {
         $mdDialog.hide(answer);
         };
-    }
+
+        $scope.submit = function(){
+            
+            console.log($scope.studentID);
+
+            var supervisionReqBody = {
+                studentID : $scope.studentID,
+                studentName : $scope.studentName,
+                studentType : $scope.studentType,
+                userID : userID
+            };
+
+            console.log(supervisionReqBody);
+             
+             $http(
+                {
+                    method: 'POST',
+                    url: 'http://localhost:8080/apis/supervision',
+                    data : supervisionReqBody,
+                    headers:{
+                        'Content-Type':'application/json'
+                    }
+                }
+            )//.then(function successCallback(response,$rootScope,$injector){
+            .success(function(data){
+                    
+                    $scope.newSupervision = data;
+                    $rootScope.$broadcast('NewUserCreated');
+                    $scope.cancel();
+                    
+            });
+    };
+    };
 }])
 .controller('CreateSupervisionCtrl',['$scope', function($scope){
     

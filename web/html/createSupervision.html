@@ -1,4 +1,4 @@
-<md-dialog id='superVisionCard' ng-controller="CreateSupervisionCtrl">
+<md-dialog id='superVisionCard'>
     <form name="studentForm" ng-submit = 'submit()'>
         <md-toolbar>
             <div class="md-toolbar-tools">
@@ -13,7 +13,7 @@
             <div class="md-dialog-content">
                 <md-input-container class="md-block">
                     <label>Student ID</label>
-                    <input name='studentId' ng-model='student.studentId' required>
+                    <input name='studentID' ng-model='studentID' required>
                     <div ng-messages="studentForm.studentId.$error">
                         <div ng-message='required'>This is required.</div>
                     </div>
@@ -21,7 +21,7 @@
 
                 <md-input-container class="md-block">
                     <label>Student Name</label>
-                    <input name='studentName' ng-model='student.studentName' required>
+                    <input name='studentName' ng-model='studentName' required>
                     <div ng-messages="studentForm.studentName.$error">
                         <div ng-message='required'>This is required.</div>
                     </div>
@@ -29,7 +29,7 @@
 
                 <md-input-container class="md-block">
                     <label>Student Type</label>
-                    <md-select ng-model="student.studentType">
+                    <md-select ng-model="studentType">
                         <md-option ng-repeat="type in types" value={{type}}>{{type}}</md-option>
                     </md-select>
                     <div ng-messages="studentForm.studentType.$error">
