@@ -29,6 +29,33 @@ var connection = mysql.createConnection(
         express.static(__dirname + '/web') //where your static content is located in your filesystem
     );
 
+
+var PlannedJournals = sequelize.define('JRNLPLN_TBL',{
+    planID : {
+        type: Sequelize.INTEGER,
+        field: 'JRNLPLN_ID',
+        primaryKey: true,
+        autoIncrement: true
+    },
+    supervisionID: {
+        type: Sequelize.INTEGER,
+        field: 'JRNLPLN_SPRVISE_ID',
+    },
+    planDate:{
+        type: Sequelize.DATE,
+        field: 'JRNLPLN_DATE'
+    },
+    noJournal:{
+        type: Sequelize.INTEGER,
+        field: 'JRNLPLN_NO_JRNL'
+    }
+},{
+    timestamps: false,
+    freezeTableName: true,
+    tableName: 'JRNLPLN_TBL'
+
+})
+
 var User = sequelize.define('USR_TBL', {
     userID : {
         type : Sequelize.INTEGER,
@@ -238,6 +265,51 @@ router.route('/supervision')
         });
     });
 });
+
+router.route('/plannedjournals')
+.post(function(req, res){
+    var tempSupervisionID = req.body.supervisionID;
+    var tempjournalPlannedDate = req.body.date;
+    var tempPlannedNo = req.body.plannno;
+
+    PlannedJournals.findOrCreate({
+        where:{
+            supervisionID: tempSupervisionID,
+            planDate : tempjournalPlannedDate
+        },
+        defaults:{
+            noJournal: tempPlannedNo
+        }
+
+    }).spread(function(plannedjournals, created){
+            if(!created){
+                var errorRes = {
+                    error:{
+                        code: '409',
+                        message : 'Plannedjournals already exist'
+                    }
+                };
+
+                res.status(409).json(errorRes);
+            }else{
+                res.status(201).json(plannedjournals);
+            }
+
+        });
+    
+})
+.get(function(req, res){
+    var tempSupervisionID = req.param.supervisionID;
+
+    PlannedJournals.findAll({
+        where:{
+            supervisionID: tempSupervisionID
+        }.then(function(plannedjournals){
+            res.json(plannedjournals);
+        })
+    })
+});
+
 
 
 app.use('/apis', router);
