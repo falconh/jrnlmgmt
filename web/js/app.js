@@ -164,7 +164,7 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
     function DialogController(userID, $scope,$rootScope, $mdDialog) {
 
 
-        $scope.types =['Undergraduate','Postgraduate'];
+        $scope.types =['Undergraduate','Postgraduate','PHD'];
         
         $scope.hide = function() {
         $mdDialog.hide();
