@@ -29,6 +29,20 @@ var connection = mysql.createConnection(
         express.static(__dirname + '/web') //where your static content is located in your filesystem
     );
 
+var months = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December'
+    ]
 
 var PlannedJournals = sequelize.define('JRNLPLN_TBL',{
     plannedID : {
@@ -127,6 +141,70 @@ var Student = sequelize.define('STUDNT_TBL',{
     tableName: 'STUDNT_TBL'
 });
 
+var Journal = sequelize.define('JRNL_TBL',{
+    journalID : {
+        type: Sequelize.INTEGER,
+        field: 'JRNL_ID',
+        primaryKey: true
+    },
+    journalName : {
+        type: Sequelize.STRING,
+        field: 'JRNL_NM'
+    },
+    paperName : {
+        type: Sequelize.STRING,
+        field: 'JRNL_PPR_NM'
+    },
+    authors : {
+        type: Sequelize.STRING,
+        field: 'JRNL_ATHRS'
+    },
+    quartileRank : {
+        type: Sequelize.STRING,
+        field: 'JRNL_QRTL_RANK'
+    },
+    impactFactor : {
+        type: Sequelize.FLOAT,
+        field: 'JRNL_IMPCT_FCTOR'
+    }
+},{
+    timestamps: false,
+    freezeTableName: true,
+    tableName: 'JRNL_TBL'
+});
+
+var JournalProgress = sequelize.define('JRNLPRGSS_TBL',{
+    journalProgressID: {
+        type: Sequelize.INTEGER,
+        field: 'JRNLPRGSS_ID',
+        primaryKey: true
+    },
+    plannedID: {
+        type: Sequelize.INTEGER,
+        field: 'JRNLPRGSS_JRNLPLN_ID'
+    },
+    journalID: {
+        type: Sequelize.INTEGER,
+        field: 'JRNLPRGSS_JRNL_ID'
+    },
+    createdDate: {
+        type: Sequelize.DATE,
+        field: 'JRNLPRGSS_CREATED_DATE'
+    },
+    status: {
+        type: Sequelize.STRING,
+        field: 'JRNLPRGSS_STATUS'
+    },
+    proof: {
+        type: Sequelize.STRING,
+        field: 'JRNLPRGSS_PROOF'
+    }
+},{
+    timestamps: false,
+    freezeTableName: true,
+    tableName: 'JRNLPRGSS_TBL'
+});
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -158,7 +236,9 @@ router.route('/login').post(function(req, res){
 
 router.route('/supervision')
 .get(function(req, res){
-    var user_id = req.param('userID');
+    var user_id = req.query.userID;
+
+    console.log(user_id);
 
     if(user_id == null || user_id == ""){
         var errorRes = {
@@ -268,8 +348,14 @@ router.route('/supervision')
 router.route('/plannedjournals')
 .post(function(req, res){
     var tempSupervisionID = req.body.supervisionID;
-    var tempjournalPlannedDate = req.body.plannedDate;
+    var tempjournalPlannedDate = new Date(req.body.plannedDate);
     var tempPlannedNo = req.body.plannedNumber;
+
+    tempjournalPlannedDate.setDate(3);
+    tempjournalPlannedDate.setHours(0);
+    tempjournalPlannedDate.setMinutes(0);
+    tempjournalPlannedDate.setSeconds(0);
+    tempjournalPlannedDate.setMilliseconds(0);
 
     console.log(req.body);
 
@@ -306,24 +392,170 @@ router.route('/plannedjournals')
     PlannedJournals.findAll({
         where:{
             supervisionID: tempSupervisionID
-        }}
-        ).then(function(plannedjournals){
+        }
+    }).then(function(plannedjournals){
             var resStructure = {};
             
-            for(var i = 1 ; i <= 12 ; i++){
-                resStructure[i.toString()] = [];
+            for(var i = 0 ; i < 12 ; i++){
+                resStructure[months[i]] = [];
             }
 
             for(var plannedjournal in plannedjournals){
                 var tempMonth = new Date(plannedjournals[plannedjournal].plannedDate).getMonth();
-                resStructure[(tempMonth + 1).toString()].push(plannedjournals[plannedjournal]);
+                console.log(months[tempMonth]);
+                resStructure[months[tempMonth]].push(plannedjournals[plannedjournal]);
             }
 
             res.json(resStructure);
         });
 });
 
+router.route('/journals')
+.post(function(req,res){
+    var tempJournalName = req.body.journalName;
+    var tempPaperName = req.body.paperName;
+    var tempAuthors = req.body.authors;
+    var tempQuartileRank = req.body.quartileRank;
+    var tempImpactFactor = req.body.impactFactor;
+    var tempPlannedID = req.body.plannedID;
 
+    Journal.findOrCreate(
+        {
+            where:{
+                journalName : tempJournalName,
+                paperName : tempPaperName,
+                authors : tempAuthors 
+            },
+            defaults:{
+                quartileRank : tempQuartileRank,
+                impactFactor : parseFloat(tempImpactFactor)
+            }
+        }
+    ).spread(function(journals,created){
+
+        var tempJournals = journals.get({
+                    plain: true
+                });
+
+            if(!created){
+
+                var tempCreatedDate = new Date();
+
+                JournalProgress.findOrCreate({
+                    where:{
+                        journalID: tempJournals.journalID,
+                        plannedID: tempPlannedID
+                    },
+                    defaults:{
+                        createdDate: tempCreatedDate,
+                        status: "Incomplete",
+                        proof: "NULL"
+                    }
+                }).spread(function(journalProgress,created){
+                    if(!created){
+                        var errorRes = {
+                            error:{
+                                code: '409',
+                                message : 'Journal already exist'
+                            }
+                        };
+
+                        res.status(409).json(errorRes);
+                    }else{
+                        tempJournals.progress = journalProgress;
+                        res.status(201).json(tempJournals);
+                    }
+                });
+
+                var errorRes = {
+                    error:{
+                        code: '409',
+                        message : 'Journal already exist'
+                    }
+                };
+
+                res.status(409).json(errorRes);
+            }else{
+
+                var tempCreatedDate = new Date();
+
+                JournalProgress.findOrCreate({
+                    where:{
+                        journalID: tempJournals.journalID,
+                        plannedID: tempPlannedID
+                    },
+                    defaults:{
+                        createdDate: tempCreatedDate,
+                        status: "Incomplete",
+                        proof: "NULL"
+                    }
+                }).spread(function(journalProgress,created){
+                    if(!created){
+                        var errorRes = {
+                            error:{
+                                code: '500',
+                                message : 'Corrupted database'
+                            }
+                        };
+
+                        res.status(500).json(errorRes);
+                    }else{
+                        tempJournals.progress = journalProgress;
+                        res.status(201).json(tempJournals);
+                    }
+                });
+            }
+    });
+})
+.get(function(req,res){
+    var tempPlannedID = req.query.plannedID;
+
+    JournalProgress.findAll({
+        where:{
+            plannedID: parseInt(tempPlannedID)
+        }
+    }).then(function(journalProgresses){
+        var tempJournalProgresses = journalProgresses.get({
+            plain: true
+        })
+
+        var journalIDs = [];
+
+        for( var journalProgress in tempJournalProgresses ){
+            journalIDs.push(tempJournalProgresses[journalProgress].journalID);
+        }
+
+        Journal.findAll({
+            where: {
+                journalID: journalIDs
+            }
+        }).then(function(journals){
+            var tempJournals = journals.get({
+                plain: true
+            });
+            for(var journal in tempJournals){
+                tempJournals[journal].progress = [];
+                for(var journalProgress in tempJournalProgresses){
+                    if(tempJournals[journal].journalID == tempJournalProgresses[JournalProgress].journalID){
+                        tempJournals[journal].progress.push(tempJournalProgresses[JournalProgress]);
+                    }
+                }
+            }
+
+            res.json(tempJournals);
+        });
+    });
+
+});
+
+router.route('/journals/:journalID')
+.get(function(req,res){
+    var tempJournalID = req.params.journalID;
+
+    Journal.findById(parseInt(tempJournalID)).then(function(journal){
+        res.json(journal);
+    });
+});
 
 app.use('/apis', router);
 

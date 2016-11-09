@@ -9,8 +9,21 @@
     width: 100%;
 }
 
-.maximumSize{
+.maximumHeight{
     height: 100%;
+}
+
+.maximumWidth{
+    width: 80%;
+}
+
+.plannedJournals{
+    border-top : thin solid black;
+    border-bottom: thin solid black;
+}
+
+.plannedJournalNo{
+    border-left: thick solid black;
 }
 
 #superVisionCard{

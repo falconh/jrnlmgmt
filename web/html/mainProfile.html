@@ -1,5 +1,5 @@
-<div class='maximumSize' ng-controller="MainDisplayCtrl" layout="row">
-    <md-sidenav class="md-sidenav-left maximumSize" 
+<div class='maximumHeight' ng-controller="MainDisplayCtrl" layout="row">
+    <md-sidenav class="md-sidenav-left maximumHeight" 
         md-component-id="left" 
         md-is-locked-open="$mdMedia('gt-md')"
         md-whiteframe="4" flex='20'>
@@ -7,7 +7,10 @@
         <md-sidemenu-group>
             <md-sidemenu-content md-heading="Supervision">
                 <md-divider></md-divider>
-                <md-sidemenu-button href="#" ng-repeat="supervision in supervisions">{{supervision.student.studentName}}</md-sidemenu-button>
+                <md-sidemenu-button ng-repeat="supervision in supervisions" 
+                    ng-click="callPlannedJournalsGetAPI(supervision.supervisionID)">
+                    {{supervision.student.studentName}}
+                </md-sidemenu-button>
                 <!--<md-sidemenu-button href="#">All</md-sidemenu-button>-->
                 <md-sidemenu-button ng-click=showCreateStudentDialog($event)>
                     <span style="font-weight:bolder">+ Create new supervision</span>
@@ -27,22 +30,112 @@
             </md-toolbar>
 
             <md-content>
-                <md-list flex>
+                <md-list layout="column" layout="center center">
                     <md-list-item ng-repeat="(key, month) in months">
-                        <md-card>
+                        <md-card class="maximumWidth" layout-padding>
                             <md-card-header md-colors="{background: 'INDIGO'}">
                                 <md-card-header-text>
                                     <span class="md-title">{{month}}</span>
                                 </md-card-header-text>
                             </md-card-header>
-                            <md-list flex>
-                                <md-list-item class="md-2-line" ng-repeat="processed in processedPlanJournals.$key ">
-                                    <div class="md-list-item-text" layout="column">
-                                        <h3>{{processed.student.studentName}}</h3>
-                                        <p>{{processed.student.studentID}}</p>
-                                    </div>
+                            <!--<md-list>
+                                <md-list-item class="md-2-line" ng-repeat="processed in processedPlannedJournals[month]" layout="row">
+                                    <md-card layout="row" class="maximumWidth" flex>
+                                        <div class="md-list-item-text" flex="80" layout-padding>
+                                            <h3 ng-cloak>{{processed.student.studentName}}</h3>
+                                            <p ng-cloak>{{processed.student.studentID}}</p>
+                                        </div>
+                                        <div class="plannedJournalNo" layout="row" layout-align="center center" flex="20">
+                                            <h1 ng-cloak>{{processed.plannedNoJournal}}</h1>
+                                        </div>
+                                    </md-card>
                                 </md-list-item>
-                            </md-list>
+                            </md-list>-->
+                            <div flex>
+                                <md-expansion-panel ng-repeat="processed in processedPlannedJournals[month]">
+                                    <md-expansion-panel-collapsed>
+                                        <div class="md-title">{{processed.student.studentName}}</div>
+                                        <div class="md-summary">Planned Journal : {{processed.plannedNoJournal}}</div>
+                                    </md-expansion-panel-collapsed>
+
+                                    <md-expansion-panel-expanded>
+                                        <md-expansion-panel-header>
+                                            <div class="md-title">Planning Details</div>
+                                            <div class="md-summary">Planned Journal : {{processed.plannedNoJournal}}</div>
+                                            <md-expansion-panel-icon></md-expansion-panel-icon>
+                                        </md-expansion-panel-header>
+
+                                        <md-expansion-panel-content layout="column">
+                                            <div flex>
+                                                <form name="planningStudentForm">
+                                                    <md-dialog-content>
+                                                        <div class="md-dialog-content">
+                                                            <md-input-container class="md-block">
+                                                                <label>Student ID</label>
+                                                                <input name='studentID' ng-model='processed.student.studentID' disabled>
+                                                                <!--<div ng-messages="studentForm.studentId.$error">
+                                                                    <div ng-message='required'>This is required.</div>
+                                                                </div>-->
+                                                            </md-input-container>
+
+                                                            <md-input-container class="md-block">
+                                                                <label>Student Name</label>
+                                                                <input name='studentName' ng-model='processed.student.studentName' disabled>
+                                                                <!--<div ng-messages="studentForm.studentId.$error">
+                                                                    <div ng-message='required'>This is required.</div>
+                                                                </div>-->
+                                                            </md-input-container>
+
+                                                            <md-input-container class="md-block">
+                                                                <label>Student Type</label>
+                                                                <input name='studentType' ng-model='processed.student.studentType' disabled>
+                                                                <!--<div ng-messages="studentForm.studentId.$error">
+                                                                    <div ng-message='required'>This is required.</div>
+                                                                </div>-->
+                                                            </md-input-container>
+                                                        </div>
+                                                    </md-dialog-content>
+                                                </form>
+                                            </div>
+                                            <div>
+                                                <md-expansion-panel ng-repeat="processed in processedPlannedJournals[month]">
+                                                    <md-expansion-panel-collapsed>
+                                                        <div class="md-title">{{processed.student.studentName}}</div>
+                                                        <div class="md-summary">Planned Journal : {{processed.plannedNoJournal}}</div>
+                                                    </md-expansion-panel-collapsed>
+
+                                                    <md-expansion-panel-expanded>
+                                                        <md-expansion-panel-header>
+                                                            <div class="md-title">Planning Details</div>
+                                                            <div class="md-summary">Planned Journal : {{processed.plannedNoJournal}}</div>
+                                                            <md-expansion-panel-icon></md-expansion-panel-icon>
+                                                        </md-expansion-panel-header>
+
+                                                        <md-expansion-panel-content>
+                                                            
+                                                        </md-expansion-panel-content>
+
+                                                        <md-expansion-panel-footer>
+                                                            <div flex></div>
+                                                            <md-button class="md-primary">Update Status</md-button>
+                                                            <md-button class="md-warn" ng-click="$panel.collapse()">Collapse</md-button>
+                                                        </md-expansion-panel-footer>
+                                                    </md-expansion-panel-expanded>
+                                                </md-expansion-panel>
+                                            </div>
+                                        </md-expansion-panel-content>
+
+                                        <md-expansion-panel-footer>
+                                            <div flex></div>
+                                            <md-button class="md-primary">New Journal</md-button>
+                                            <md-button class="md-warn" ng-click="$panel.collapse()">Collapse</md-button>
+                                        </md-expansion-panel-footer>
+                                    </md-expansion-panel-expanded>
+                                </md-expansion-panel>
+                            </div>
+                            <md-card-actions layout="row" layout-align="end center">
+                                <md-button class="md-raised md-primary" ng-click="showCreateJournalPlanDialog($event,key+1)">+ Create new planning</md-button>
+                            </md-card-actions>
                         </md-card>
                     </md-list-item>
                 </md-list>

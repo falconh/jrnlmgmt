@@ -1,0 +1,40 @@
+<md-dialog id='superVisionCard'>
+    <form name="studentForm" ng-submit = 'submit()'>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>Create New Journal Planning</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                <md-icon md-svg-src="img/icons/ic_close_24px.svg" aria-label="Close dialog"></md-icon>
+                </md-button>
+            </div>
+        </md-toolbar>
+        <md-dialog-content>
+            <div class="md-dialog-content">
+                <md-input-container class="md-block">
+                    <label>Student</label>
+                    <md-select ng-model='selectedStudent' 
+                        ng-model-options="{trackBy: '$value.supervisionID'}" required>
+                        <md-option ng-value="supervision" ng-repeat="supervision in supervisions">
+                            {{supervision.student.studentName}}
+                        </md-option>
+                    <div ng-messages="studentForm.studentId.$error">
+                        <div ng-message='required'>This is required.</div>
+                    </div>
+                </md-input-container>
+
+                <md-input-container class="md-block">
+                    <label>Number of Journal</label>
+                    <input ng-model='noOfJournal' required>
+                    <div ng-messages="studentForm.studentName.$error">
+                        <div ng-message='required'>This is required.</div>
+                    </div>
+                </md-input-container>
+
+                <div>
+                    <md-button id='CreateJournalPlanSubmit' class='md-raised md-primary' type="submit">Submit</md-button>
+                </div>
+            </div>
+        </md-dialog-content>
+        </form>
+</md-dialog>
