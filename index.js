@@ -31,7 +31,7 @@ var connection = mysql.createConnection(
 
 
 var PlannedJournals = sequelize.define('JRNLPLN_TBL',{
-    planID : {
+    plannedID : {
         type: Sequelize.INTEGER,
         field: 'JRNLPLN_ID',
         primaryKey: true,
@@ -40,21 +40,23 @@ var PlannedJournals = sequelize.define('JRNLPLN_TBL',{
     supervisionID: {
         type: Sequelize.INTEGER,
         field: 'JRNLPLN_SPRVISE_ID',
+        unique : 'compositeIndex'
     },
-    planDate:{
-        type: Sequelize.DATE,
-        field: 'JRNLPLN_DATE'
-    },
-    noJournal:{
+    plannedNoJournal : {
         type: Sequelize.INTEGER,
         field: 'JRNLPLN_NO_JRNL'
+    },
+    plannedDate:{
+        type: Sequelize.DATE,
+        field: 'JRNLPLN_DATE',
+        unique : 'compositeIndex'
     }
 },{
     timestamps: false,
     freezeTableName: true,
     tableName: 'JRNLPLN_TBL'
 
-})
+});
 
 var User = sequelize.define('USR_TBL', {
     userID : {
@@ -137,7 +139,6 @@ router.route('/login').post(function(req, res){
             userUsername: username,
             userPassword: password
         },
-        attributes: {exclude : ['id']}
     }).then(function(user){
 
         var errorRes = {
@@ -246,8 +247,7 @@ router.route('/supervision')
             defaults:{
                 studentID: tempStudent.studentID,
                 userID : tempUserID
-            },
-            attributes: {exclude : ['id']}  
+            }
         }).spread(function(supervision, created){
             if(!created){
                 var errorRes = {
@@ -256,7 +256,6 @@ router.route('/supervision')
                         message : 'Supervision already exist'
                     }
                 };
-
                 res.status(409).json(errorRes);
             }else{
                 res.status(201).json(supervision);
@@ -269,18 +268,19 @@ router.route('/supervision')
 router.route('/plannedjournals')
 .post(function(req, res){
     var tempSupervisionID = req.body.supervisionID;
-    var tempjournalPlannedDate = req.body.date;
-    var tempPlannedNo = req.body.plannno;
+    var tempjournalPlannedDate = req.body.plannedDate;
+    var tempPlannedNo = req.body.plannedNumber;
+
+    console.log(req.body);
 
     PlannedJournals.findOrCreate({
         where:{
             supervisionID: tempSupervisionID,
-            planDate : tempjournalPlannedDate
+            plannedDate : tempjournalPlannedDate
         },
         defaults:{
-            noJournal: tempPlannedNo
+            plannedNoJournal: parseInt(tempPlannedNo)
         }
-
     }).spread(function(plannedjournals, created){
             if(!created){
                 var errorRes = {
@@ -299,15 +299,28 @@ router.route('/plannedjournals')
     
 })
 .get(function(req, res){
-    var tempSupervisionID = req.param.supervisionID;
+    var tempSupervisionID = req.query.supervisionID;
+
+    console.log(req.param.supervisionID);
 
     PlannedJournals.findAll({
         where:{
             supervisionID: tempSupervisionID
-        }.then(function(plannedjournals){
-            res.json(plannedjournals);
-        })
-    })
+        }}
+        ).then(function(plannedjournals){
+            var resStructure = {};
+            
+            for(var i = 1 ; i <= 12 ; i++){
+                resStructure[i.toString()] = [];
+            }
+
+            for(var plannedjournal in plannedjournals){
+                var tempMonth = new Date(plannedjournals[plannedjournal].plannedDate).getMonth();
+                resStructure[(tempMonth + 1).toString()].push(plannedjournals[plannedjournal]);
+            }
+
+            res.json(resStructure);
+        });
 });
 
 

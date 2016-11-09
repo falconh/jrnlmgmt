@@ -80,6 +80,23 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
         console.log($rootScope.supervisions);
     };
 
+    var processPlannedJournals = function(plannedJournals,$scope){
+        for(var i = 1 ; i <= 12 ; i++){
+            for(var plannedjournal in plannedJournals[i.toString()]){
+                for(var supervision in $scope.supervisions){
+                    if($scope.supervisions[supervision].supervisionID == plannedJournals[i.toString()][plannedjournal].supervisionID){
+                        plannedJournals[i.toString()][plannedjournal].student = $scope.supervisions[supervision].student;
+                        break;
+                    }
+                }
+            }
+        }
+
+        console.log(plannedJournals);
+
+        return plannedJournals;
+    };
+
     $rootScope.$on('NewUserCreated',function(){
         $http(
             {
@@ -97,13 +114,25 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
     $http(
             {
                 method: 'GET',
-                url: 'http://localhost:8080/apis/supervision?userID=' + userID,
+                url: 'http://localhost:8080/apis/supervision?userID=' + userID
             }
         )//.then(function successCallback(response,$rootScope,$injector){
         .success(function(data){
                 
                 $scope.supervisions = data;
                 broadcastSuccess(data);
+
+                $http(
+                    {
+                        method: 'GET',
+                        url: 'http://localhost:8080/apis/plannedjournals?supervisionID=' + $scope.supervisions[0].supervisionID
+                    }
+                )
+                .success(function(data){
+
+                    $scope.processedPlannedjournals = processPlannedJournals(data,$scope);
+                    
+                })
         });
     
 
@@ -120,31 +149,6 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
         'November',
         'December'
     ]
-
-    $scope.journalPlan = {
-        January : [
-            {
-                STUDNT_NM: 'Calvin',
-                PlanNo : '4'
-            },
-            {
-                STUDNT_NM: 'OhReally',
-                PlanNo : '5'
-            }
-        ],
-        February : [
-            {
-                STUDNT_NM: 'Calvin',
-                PlanNo : '1'
-            },
-            {
-                STUDNT_NM: 'OhReally',
-                PlanNo : '3'
-            }
-        ]
-    }
-
-    console.log($scope.journalPlan['February']);
 
     $scope.showCreateStudentDialog = function(ev){
         $mdDialog.show(

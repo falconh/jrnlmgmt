@@ -6,6 +6,7 @@
         <md-sidemenu>
         <md-sidemenu-group>
             <md-sidemenu-content md-heading="Supervision">
+                <md-divider></md-divider>
                 <md-sidemenu-button href="#" ng-repeat="supervision in supervisions">{{supervision.student.studentName}}</md-sidemenu-button>
                 <!--<md-sidemenu-button href="#">All</md-sidemenu-button>-->
                 <md-sidemenu-button ng-click=showCreateStudentDialog($event)>
@@ -27,7 +28,23 @@
 
             <md-content>
                 <md-list flex>
-                    <md-subheader class="md-no-sticky">
+                    <md-list-item ng-repeat="(key, month) in months">
+                        <md-card>
+                            <md-card-header md-colors="{background: 'INDIGO'}">
+                                <md-card-header-text>
+                                    <span class="md-title">{{month}}</span>
+                                </md-card-header-text>
+                            </md-card-header>
+                            <md-list flex>
+                                <md-list-item class="md-2-line" ng-repeat="processed in processedPlanJournals.$key ">
+                                    <div class="md-list-item-text" layout="column">
+                                        <h3>{{processed.student.studentName}}</h3>
+                                        <p>{{processed.student.studentID}}</p>
+                                    </div>
+                                </md-list-item>
+                            </md-list>
+                        </md-card>
+                    </md-list-item>
                 </md-list>
             </md-content>
         </div>
