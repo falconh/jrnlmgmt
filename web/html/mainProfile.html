@@ -117,7 +117,10 @@
 
                                                         <md-expansion-panel-footer>
                                                             <div flex></div>
-                                                            <md-button class="md-primary">Update Status</md-button>
+                                                            <md-button class="md-primary"
+                                                                ng-click="showCreateNewStatusDialog($event,processed.plannedID,1,processed.supervisionID)">
+                                                                Update Status
+                                                            </md-button>
                                                             <md-button class="md-warn" ng-click="$panel.collapse()">Collapse</md-button>
                                                         </md-expansion-panel-footer>
                                                     </md-expansion-panel-expanded>
@@ -127,7 +130,10 @@
 
                                         <md-expansion-panel-footer>
                                             <div flex></div>
-                                            <md-button class="md-primary">New Journal</md-button>
+                                            <md-button class="md-primary" 
+                                                ng-click="showCreateNewJournalDialog($event,processed.plannedID,processed.supervisionID)">
+                                                New Journal
+                                            </md-button>
                                             <md-button class="md-warn" ng-click="$panel.collapse()">Collapse</md-button>
                                         </md-expansion-panel-footer>
                                     </md-expansion-panel-expanded>

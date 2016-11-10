@@ -101,6 +101,28 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
         return plannedJournals;
     };
 
+    var addJournals = function(journals,$scope){
+
+        var tempProcessedPlannedJournals = $scope.processedPlannedJournals;
+        for(var i = 1 ; i <= 12 ; i++){
+            for(var plannedjournal in tempProcessedPlannedJournals[$scope.months[i]]){
+                for(var tempPlannedJournal in tempProcessedPlannedJournals[$scope.months[i]][plannedjournal]){
+                    var tempPlaceHolder = tempProcessedPlannedJournals[$scope.months[i]][plannedjournal][tempPlannedJournal];
+                    console.log(tempProcessedPlannedJournals[$scope.months[i]][plannedjournal][tempPlannedJournal]);
+                    tempPlaceHolder.journals = [];
+                    for(var journal in journals){
+                        if(journals[journal].progress.plannedID == tempPlaceHolder.plannedID){
+                            tempPlaceHolder.journals.push(journals[journal]);
+                        }
+                    tempProcessedPlannedJournals[$scope.months[i]][plannedjournal][tempPlannedJournal] = tempPlaceHolder;
+                    }
+                }
+            }
+        }
+        console.log(tempProcessedPlannedJournals);
+        return tempProcessedPlannedJournals;
+    }
+
     $scope.callPlannedJournalsGetAPI = function(supervisionID){
 
             console.log('callPlannedJournalsGetAPI : ' + supervisionID);
@@ -113,9 +135,26 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
                 .success(function(data){
 
                     $scope.processedPlannedJournals = processPlannedJournals(data,$scope);
+                    $scope.callJournalsGetAPI(supervisionID);
                     
                 });
     };
+
+
+    $scope.callJournalsGetAPI = function(supervisionID){
+                $http(
+                    {
+                        method: 'GET',
+                        url: 'http://localhost:8080/apis/journals?supervisionID=' + supervisionID
+                    }
+                )
+                .success(function(data){
+
+                    $scope.processedPlannedJournals = addJournals(data,$scope);
+                    
+                });
+        
+    }
 
     $scope.callSupervisionsGetAPI = function(userID){
         $http(
@@ -180,7 +219,7 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
         $mdDialog.show(
             {
                 controller: CreateStudentDialogController,
-                templateUrl : 'html/CreateSupervision.html',
+                templateUrl : 'html/createSupervision.html',
                 parent: angular.element(document.body),
                 targetEvent: ev,
                 clickOutsideToClose: true,
@@ -246,7 +285,7 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
         $mdDialog.show(
             {
                 controller: CreateJournalPlanDialogController,
-                templateUrl : 'html/CreateJournalPlan.html',
+                templateUrl : 'html/createJournalPlan.html',
                 parent: angular.element(document.body),
                 targetEvent: ev,
                 clickOutsideToClose: true,
@@ -308,6 +347,160 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
             });
     };
     };
+
+     $scope.showCreateNewJournalDialog = function(ev, tempPlannedID, tempSupervisionID){
+        $mdDialog.show(
+            {
+                controller: CreateNewJournalDialogController,
+                templateUrl : 'html/createNewJournal.html',
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                clickOutsideToClose: true,
+                locals:{
+                    plannedID : tempPlannedID,
+                    supervisionID : tempSupervisionID
+                }
+            }
+        )
+    };
+
+    function CreateNewJournalDialogController(plannedID,supervisionID, $scope,$rootScope, $mdDialog) {
+
+        $scope.plannedID = plannedID;
+        $scope.supervisionID = supervisionID;
+        $scope.quartileRanks = [
+            'Q1',
+            'Q2',
+            'Q3',
+            'Q4'
+        ];
+
+        
+        $scope.hide = function() {
+            $mdDialog.hide();
+        };
+
+        $scope.cancel = function() {
+            $mdDialog.cancel();
+        };
+
+        $scope.answer = function(answer) {
+            $mdDialog.hide(answer);
+        };
+
+        $scope.submit = function(){
+
+
+            var newJournalReqBody = {
+                journalName : $scope.journalName,
+                paperName : $scope.paperName,
+                authors: $scope.authors,
+                quartileRank : $scope.selectedQuartileRank,
+                impactFactor: $scope.impactFactor,
+                plannedID : $scope.plannedID
+            };
+
+            console.log(newJournalReqBody);
+             
+             $http(
+                {
+                    method: 'POST',
+                    url: 'http://localhost:8080/apis/journals',
+                    data : newJournalReqBody,
+                    headers:{
+                        'Content-Type':'application/json'
+                    }
+                }
+            )//.then(function successCallback(response,$rootScope,$injector){
+            .success(function(data){
+                    
+                    $rootScope.$broadcast('NewJournalCreated', 
+                        {
+                            selectedSupervisionID: $scope.supervisionID
+                        });
+                    $scope.cancel();
+                    
+            });
+    };
+    };
+
+    $scope.showCreateNewStatusDialog = function(ev, tempPlannedID, tempJournalID, tempSupervisionID){
+        $mdDialog.show(
+            {
+                controller: CreateNewStatusDialogController,
+                templateUrl : 'html/createNewStatus.html',
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                clickOutsideToClose: true,
+                locals:{
+                    plannedID : tempPlannedID,
+                    supervisionID : tempSupervisionID,
+                    journalID : tempJournalID
+                }
+            }
+        )
+    };
+
+    function CreateNewStatusDialogController(plannedID, journalID, supervisionID, $scope,$rootScope, $mdDialog) {
+
+        $scope.plannedID = plannedID;
+        $scope.supervisionID = supervisionID;
+        $scope.journalID = journalID;
+        $scope.statusList = [
+            'submmitted',
+            'accepted',
+            'minor revision',
+            'major revision',
+            'rejection'
+        ];
+
+        
+        $scope.hide = function() {
+            $mdDialog.hide();
+        };
+
+        $scope.cancel = function() {
+            $mdDialog.cancel();
+        };
+
+        $scope.answer = function(answer) {
+            $mdDialog.hide(answer);
+        };
+
+        $scope.submit = function(){
+
+
+            var newJournalReqBody = {
+                plannedID : $scope.plannedID,
+                journalID : $scope.journalID,
+                status: $scope.selectedStatus,
+                proof : $scope.proof
+            };
+
+            console.log(newJournalReqBody);
+             
+            //  $http(
+            //     {
+            //         method: 'POST',
+            //         url: 'http://localhost:8080/apis/journals',
+            //         data : newJournalReqBody,
+            //         headers:{
+            //             'Content-Type':'application/json'
+            //         }
+            //     }
+            // )//.then(function successCallback(response,$rootScope,$injector){
+            // .success(function(data){
+                    
+            //         $rootScope.$broadcast('NewJournalCreated', 
+            //             {
+            //                 selectedSupervisionID: $scope.supervisionID
+            //             });
+            //         $scope.cancel();
+                    
+            // });
+    };
+    };
+
 
 }])
 .controller('CreateSupervisionCtrl',['$scope', function($scope){

@@ -1,0 +1,41 @@
+<md-dialog id='newStatusCard'>
+    <form name="newStatusForm" ng-submit = 'submit()'>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>Create New Journal</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                <md-icon md-svg-src="img/icons/ic_close_24px.svg" aria-label="Close dialog"></md-icon>
+                </md-button>
+            </div>
+        </md-toolbar>
+        <md-dialog-content>
+            <div class="md-dialog-content">
+                    <md-input-container class="md-block">
+                        <label>Status</label>
+                        <md-select ng-model='selectedStatus' required>
+                            <md-option ng-value="status" ng-repeat="status in statusList">
+                                {{status}}
+                            </md-option>
+                        <div ng-messages="newStatusForm.status.$error">
+                            <div ng-message='required'>This is required.</div>
+                        </div>
+                    </md-input-container>
+
+                    <md-input-container class="md-block">
+                        <label>Note</label>
+                        <textarea ng-model='proof' required md-maxlength="250" rows="3" md-select-on-focus>
+                        </textarea>
+                        <div ng-messages="newStatusForm.proof.$error">
+                            <div ng-message='required'>This is required.</div>
+                        </div>
+                    </md-input-container>
+
+
+                <div>
+                    <md-button id='CreateNewStatusSubmit' class='md-raised md-primary' type="submit">Submit</md-button>
+                </div>
+            </div>
+        </md-dialog-content>
+        </form>
+</md-dialog>

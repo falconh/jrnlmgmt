@@ -9,6 +9,14 @@
     width: 100%;
 }
 
+#newStatusCard{
+    width: 70%;
+}
+
+#newJournalCard{
+    width: 70%;
+}
+
 .maximumHeight{
     height: 100%;
 }

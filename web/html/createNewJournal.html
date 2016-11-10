@@ -1,0 +1,65 @@
+<md-dialog id='newJournalCard'>
+    <form name="newJournalForm" ng-submit = 'submit()'>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>Create New Journal</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                <md-icon md-svg-src="img/icons/ic_close_24px.svg" aria-label="Close dialog"></md-icon>
+                </md-button>
+            </div>
+        </md-toolbar>
+        <md-dialog-content>
+            <div class="md-dialog-content">
+                <md-input-container class="md-block">
+                    <label>Journal Name</label>
+                    <input ng-model='journalName' required>
+                    <div ng-messages="newJournalForm.journalName.$error">
+                        <div ng-message='required'>This is required.</div>
+                    </div>
+                </md-input-container>
+
+                <md-input-container class="md-block">
+                    <label>Title of Paper</label>
+                    <input ng-model='paperName' required>
+                    <div ng-messages="newJournalForm.paperName.$error">
+                        <div ng-message='required'>This is required.</div>
+                    </div>
+                </md-input-container>
+
+                <md-input-container class="md-block">
+                    <label>Authors</label>
+                    <input ng-model='authors' required>
+                    <div ng-messages="newJournalForm.authors.$error">
+                        <div ng-message='required'>This is required.</div>
+                    </div>
+                </md-input-container>
+
+               <div layout="row">
+                    <md-input-container class="md-block" flex="50">
+                        <label>Impact Factor</label>
+                        <input ng-model='impactFactor' required>
+                        <div ng-messages="newJournalForm.impactFactor.$error">
+                            <div ng-message='required'>This is required.</div>
+                        </div>
+                    </md-input-container>
+
+                    <md-input-container class="md-block" flex="50">
+                        <label>Quartile Rank</label>
+                        <md-select ng-model='selectedQuartileRank' required>
+                            <md-option ng-value="quartileRank" ng-repeat="quartileRank in quartileRanks">
+                                {{quartileRank}}
+                            </md-option>
+                        <div ng-messages="newJournalForm.quartileRank.$error">
+                            <div ng-message='required'>This is required.</div>
+                        </div>
+                    </md-input-container>
+               </div>
+
+                <div>
+                    <md-button id='CreateNewJournalSubmit' class='md-raised md-primary' type="submit">Submit</md-button>
+                </div>
+            </div>
+        </md-dialog-content>
+        </form>
+</md-dialog>

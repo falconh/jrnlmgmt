@@ -145,7 +145,8 @@ var Journal = sequelize.define('JRNL_TBL',{
     journalID : {
         type: Sequelize.INTEGER,
         field: 'JRNL_ID',
-        primaryKey: true
+        primaryKey: true,
+        autoIncrement: true
     },
     journalName : {
         type: Sequelize.STRING,
@@ -177,7 +178,8 @@ var JournalProgress = sequelize.define('JRNLPRGSS_TBL',{
     journalProgressID: {
         type: Sequelize.INTEGER,
         field: 'JRNLPRGSS_ID',
-        primaryKey: true
+        primaryKey: true,
+        autoIncrement: true
     },
     plannedID: {
         type: Sequelize.INTEGER,
@@ -426,6 +428,7 @@ router.route('/journals')
                 paperName : tempPaperName,
                 authors : tempAuthors 
             },
+            attributes: {exclude : ['JRNL_ID']},
             defaults:{
                 quartileRank : tempQuartileRank,
                 impactFactor : parseFloat(tempImpactFactor)
@@ -466,15 +469,6 @@ router.route('/journals')
                         res.status(201).json(tempJournals);
                     }
                 });
-
-                var errorRes = {
-                    error:{
-                        code: '409',
-                        message : 'Journal already exist'
-                    }
-                };
-
-                res.status(409).json(errorRes);
             }else{
 
                 var tempCreatedDate = new Date();
@@ -508,43 +502,90 @@ router.route('/journals')
     });
 })
 .get(function(req,res){
-    var tempPlannedID = req.query.plannedID;
+    var tempSupervisionID = req.query.supervisionID;
 
-    JournalProgress.findAll({
+     PlannedJournals.findAll({
         where:{
-            plannedID: parseInt(tempPlannedID)
+            supervisionID: tempSupervisionID
         }
-    }).then(function(journalProgresses){
-        var tempJournalProgresses = journalProgresses.get({
-            plain: true
-        })
+    }).then(function(plannedjournals){
 
-        var journalIDs = [];
-
-        for( var journalProgress in tempJournalProgresses ){
-            journalIDs.push(tempJournalProgresses[journalProgress].journalID);
+        var tempPlannedID = [];
+        for(var plannedjournal in plannedjournals){
+            tempPlannedID.push(plannedjournals[plannedjournal].plannedID);
         }
 
-        Journal.findAll({
-            where: {
-                journalID: journalIDs
+        JournalProgress.findAll({
+            where:{
+                plannedID: tempPlannedID
             }
-        }).then(function(journals){
-            var tempJournals = journals.get({
-                plain: true
-            });
-            for(var journal in tempJournals){
-                tempJournals[journal].progress = [];
-                for(var journalProgress in tempJournalProgresses){
-                    if(tempJournals[journal].journalID == tempJournalProgresses[JournalProgress].journalID){
-                        tempJournals[journal].progress.push(tempJournalProgresses[JournalProgress]);
+        }).then(function(journalProgresses){
+
+            var journalIDs = [];
+
+            for( var journalProgress in journalProgresses ){
+                journalIDs.push(journalProgresses[journalProgress].journalID);
+            }
+
+            Journal.findAll({
+                where: {
+                    journalID: journalIDs
+                }
+            }).then(function(journals){
+                var tempJournals = [];
+
+                for(var journal in journals){
+                    tempJournals[journal] = journals[journal].get({plain:true});
+                    tempJournals[journal].progress = [];
+                    for(var journalProgress in journalProgresses){
+                        if(tempJournals[journal].journalID == journalProgresses[journalProgress].journalID){
+                            tempJournals[journal].progress.push(journalProgresses[journalProgress]);
+                        }
                     }
                 }
-            }
 
-            res.json(tempJournals);
+                console.log(tempJournals);
+                
+                res.json(tempJournals);
+            });
         });
-    });
+            
+        });
+
+    // JournalProgress.findAll({
+    //     where:{
+    //         plannedID: parseInt(tempPlannedID)
+    //     }
+    // }).then(function(journalProgresses){
+
+    //     var journalIDs = [];
+
+    //     for( var journalProgress in journalProgresses ){
+    //         journalIDs.push(journalProgresses[journalProgress].journalID);
+    //     }
+
+    //     Journal.findAll({
+    //         where: {
+    //             journalID: journalIDs
+    //         }
+    //     }).then(function(journals){
+    //         var tempJournals = [];
+
+    //         for(var journal in journals){
+    //             tempJournals[journal] = journals[journal].get({plain:true});
+    //             tempJournals[journal].progress = [];
+    //             for(var journalProgress in journalProgresses){
+    //                 if(tempJournals[journal].journalID == journalProgresses[journalProgress].journalID){
+    //                     tempJournals[journal].progress.push(journalProgresses[journalProgress]);
+    //                 }
+    //             }
+    //         }
+
+    //         console.log(tempJournals);
+            
+    //         res.json(tempJournals);
+    //     });
+    // });
 
 });
 
