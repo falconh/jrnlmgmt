@@ -98,10 +98,10 @@
                                                 </form>
                                             </div>
                                             <div>
-                                                <md-expansion-panel ng-repeat="processed in processedPlannedJournals[month]">
+                                                <md-expansion-panel ng-repeat="journal in processed.journals">
                                                     <md-expansion-panel-collapsed>
-                                                        <div class="md-title">{{processed.student.studentName}}</div>
-                                                        <div class="md-summary">Planned Journal : {{processed.plannedNoJournal}}</div>
+                                                        <div class="md-title">{{journal.paperName}}</div>
+                                                        <div class="md-summary">{{journal.journalName}}</div>
                                                     </md-expansion-panel-collapsed>
 
                                                     <md-expansion-panel-expanded>

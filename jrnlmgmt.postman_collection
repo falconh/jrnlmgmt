@@ -1,0 +1,93 @@
+{
+	"variables": [],
+	"info": {
+		"name": "jrnlmgmt",
+		"_postman_id": "69f9c50b-7440-990f-a689-9d0e22634116",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "create planned journals",
+			"request": {
+				"url": "http://localhost:8080/apis/plannedjournals",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"supervisionID\" : \"1\",\n\t\"plannedDate\" : \"2016-08-02 00:00:00\",\n\t\"plannedNumber\" : \"4\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "get planned journals",
+			"request": {
+				"url": "http://localhost:8080/apis/plannedjournals?supervisionID=1",
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "get supervision",
+			"request": {
+				"url": "http://localhost:8080/apis/supervision?userID=1",
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "create new journals",
+			"request": {
+				"url": "http://localhost:8080/apis/journals",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"journalName\" : \"journal9\",\n\t\"paperName\" : \"paper9\",\n\t\"authors\" : \"S1;S2;S3\",\n\t\"quartileRank\" : \"Q2\",\n\t\"impactFactor\" : 1023.23,\n\t\"plannedID\" : \"4\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "get new journals",
+			"request": {
+				"url": "http://localhost:8080/apis/journals?supervisionID=1",
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
