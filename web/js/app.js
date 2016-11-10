@@ -106,16 +106,17 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
         var tempProcessedPlannedJournals = $scope.processedPlannedJournals;
         for(var i = 1 ; i <= 12 ; i++){
             for(var plannedjournal in tempProcessedPlannedJournals[$scope.months[i]]){
-                for(var tempPlannedJournal in tempProcessedPlannedJournals[$scope.months[i]][plannedjournal]){
-                    var tempPlaceHolder = tempProcessedPlannedJournals[$scope.months[i]][plannedjournal][tempPlannedJournal];
-                    console.log(tempProcessedPlannedJournals[$scope.months[i]][plannedjournal][tempPlannedJournal]);
+                    var tempPlaceHolder = tempProcessedPlannedJournals[$scope.months[i]][plannedjournal];
+                    console.log(tempPlaceHolder);
                     tempPlaceHolder.journals = [];
                     for(var journal in journals){
-                        if(journals[journal].progress.plannedID == tempPlaceHolder.plannedID){
-                            tempPlaceHolder.journals.push(journals[journal]);
+                        for(var tempProgress in journals[journal].progress){
+                            if(journals[journal].progress[tempProgress].plannedID == tempPlaceHolder.plannedID){
+                                tempPlaceHolder.journals.push(journals[journal]);
+                                break;
+                            }
                         }
-                    tempProcessedPlannedJournals[$scope.months[i]][plannedjournal][tempPlannedJournal] = tempPlaceHolder;
-                    }
+                    tempProcessedPlannedJournals[$scope.months[i]][plannedjournal] = tempPlaceHolder;
                 }
             }
         }

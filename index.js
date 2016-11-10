@@ -20,7 +20,7 @@ var connection = mysql.createConnection(
 	{
 		host		: 'localhost',
 		user 		: 'root',
-		password	: 'TestUser123',
+		password	: '',
 		database	: 'jrnlmgmt'
 	});
 
