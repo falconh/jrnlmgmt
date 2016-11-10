@@ -187,6 +187,12 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
         $scope.callPlannedJournalsGetAPI(args.selectedSupervisionID);
     });
 
+     $rootScope.$on('NewJournalCreated',function(event, args){
+        $scope.callPlannedJournalsGetAPI(args.selectedSupervisionID);
+    });
+
+    
+
     $http(
             {
                 method: 'GET',
