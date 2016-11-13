@@ -1,5 +1,5 @@
 'use strict';
-angular.module('myApp',['ngMaterial','ngMessages','ui.router','ngMaterialSidemenu','material.components.expansionPanels'])
+angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','ngMaterialSidemenu','material.components.expansionPanels'])
 .config(function($mdThemingProvider){
     $mdThemingProvider.theme('default')
     .primaryPalette('blue')
@@ -37,41 +37,35 @@ angular.module('myApp',['ngMaterial','ngMessages','ui.router','ngMaterialSidemen
         $stateProvider.state(state);
     });
 }])
-.controller('LoginCtrl',['$scope','$rootScope','$state','$stateParams','$http','$q','$location',
-function($scope,$state,$stateParams,$rootScope,$http,$q,$location){
-
-
-    var broadcastSuccess = function(data){
-        $rootScope.user = $scope.user.userID ;
-        $location.path('/general/' + $rootScope.user);
-    };
+.controller('LoginCtrl',['$scope','$state','$stateParams','$location',
+    'OAuth','SharedData',
+    function($scope, $state, $stateParams, $location, OAuth, SharedData){
 
     $scope.submit = function(){
-        var loginReqBody = {
-            username : $scope.loginUsername,
-            password : $scope.loginPassword
-        }
 
-        $http(
-            {
-                method: 'POST',
-                url: 'http://localhost:8080/apis/login',
-                data : loginReqBody,
-                headers:{
-                    'Content-Type':'application/json'
+        OAuth.getToken($scope.loginUsername,$scope.loginPassword).then(
+            function successCallBack(response){
+
+                if(response.status == 200){
+                    $scope.user = response.data;
+                    console.log(response.data);
+                    SharedData.user = $scope.user;
+                    $location.path('/general/' + SharedData.user.userID);
                 }
+            },
+            function errorCallBack(response){
+
             }
-        )//.then(function successCallback(response,$rootScope,$injector){
-        .success(function(data){
-                
-                $scope.user = data;
-                //$state.go('mainProfile');
-                broadcastSuccess(data);
-        });
+        );
+       
     };
 }])
-.controller('MainDisplayCtrl', ['$scope','$mdDialog','$http','$rootScope','$state','$stateParams',
-function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
+.controller('MainDisplayCtrl', ['$scope','$mdDialog','$rootScope','$state',
+    '$stateParams','PlannedJournal','Journal','Supervision', 'SharedData',
+    function($scope, $mdDialog, $rootScope, $state, $stateParams, 
+        PlannedJournal, Journal, Supervision, SharedData){
+
+    console.log(SharedData);
 
     $scope.userID = $stateParams.userID;
 
@@ -126,61 +120,66 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
 
     $scope.callPlannedJournalsGetAPI = function(supervisionID){
 
-            console.log('callPlannedJournalsGetAPI : ' + supervisionID);
-                $http(
-                    {
-                        method: 'GET',
-                        url: 'http://localhost:8080/apis/plannedjournals?supervisionID=' + supervisionID
-                    }
-                )
-                .success(function(data){
+                PlannedJournal
+                .callGetAPI(supervisionID)
+                .then(
+                    function successCallBack(response){
 
-                    $scope.processedPlannedJournals = processPlannedJournals(data,$scope);
-                    $scope.callJournalsGetAPI(supervisionID);
+                        if(response.status == 200){
+
+                            $scope.processedPlannedJournals = processPlannedJournals(response.data,$scope);
+                            $scope.callJournalsGetAPI(supervisionID);
+                        }
                     
-                });
+                    },
+                    function errorCallBack(response){
+
+                    }
+                );
     };
 
 
     $scope.callJournalsGetAPI = function(supervisionID){
-                $http(
-                    {
-                        method: 'GET',
-                        url: 'http://localhost:8080/apis/journals?supervisionID=' + supervisionID
-                    }
-                )
-                .success(function(data){
+                
+                Journal
+                .callGetAPI(supervisionID)
+                .then(
+                    function successCallBack(response){
 
-                    $scope.processedPlannedJournals = addJournals(data,$scope);
+                        if(response.status == 200){
+                            $scope.processedPlannedJournals = addJournals(response.data,$scope);
+                        }
                     
-                });
+                    },
+                    function errorCallBack(response){
+
+                    }
+                );
         
     }
 
     $scope.callSupervisionsGetAPI = function(userID){
-        $http(
-            {
-                method: 'GET',
-                url: 'http://localhost:8080/apis/supervision?userID=' + userID,
-            }
-        )//.then(function successCallback(response,$rootScope,$injector){
-        .success(function(data){
+        
+        Supervision
+        .callGetAPI(userID)
+        .then(
+            function successCallBack(response){
                 
-                $scope.supervisions = data;
-        });
+                if(response.status == 200){
+                    $scope.supervisions = response.data;
+                    if(response.data !== null && response.data.length > 0){
+                        $scope.callPlannedJournalsGetAPI($scope.supervisions[0].supervisionID);
+                    }
+                }
+            },
+            function errorCallBack(response){
+
+            }
+        );
     };
 
     $rootScope.$on('NewUserCreated',function(){
-        $http(
-            {
-                method: 'GET',
-                url: 'http://localhost:8080/apis/supervision?userID=' + $scope.userID,
-            }
-        )//.then(function successCallback(response,$rootScope,$injector){
-        .success(function(data){
-                
-                $scope.supervisions = data;
-        });
+        callSupervisionsGetAPI(SharedData.user.userID);
     });
 
     $rootScope.$on('NewJournalPlanCreated',function(event, args){
@@ -193,19 +192,7 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
 
     
 
-    $http(
-            {
-                method: 'GET',
-                url: 'http://localhost:8080/apis/supervision?userID=' + $scope.userID
-            }
-        )//.then(function successCallback(response,$rootScope,$injector){
-        .success(function(data){
-                console.log($scope.userID);
-                $scope.supervisions = data;
-                if(data !== null && data.length > 0){
-                    $scope.callPlannedJournalsGetAPI($scope.supervisions[0].supervisionID);
-                }
-        });
+    $scope.callSupervisionsGetAPI($scope.userID);
     
 
     $scope.months = [
@@ -225,7 +212,7 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
     $scope.showCreateStudentDialog = function(ev){
         $mdDialog.show(
             {
-                controller: CreateStudentDialogController,
+                controller: 'CreateStudentDialogController',
                 templateUrl : 'html/createSupervision.html',
                 parent: angular.element(document.body),
                 targetEvent: ev,
@@ -237,22 +224,74 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
         )
     };
 
-    function CreateStudentDialogController(userID, $scope,$rootScope, $mdDialog) {
+    $scope.showCreateJournalPlanDialog = function(ev, selectedMonth){
+        $mdDialog.show(
+            {
+                controller: "CreateJournalPlanDialogController",
+                templateUrl : 'html/createJournalPlan.html',
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                clickOutsideToClose: true,
+                locals:{
+                    supervisions: $scope.supervisions,
+                    month: selectedMonth
+                }
+            }
+        )
+    };
+
+     $scope.showCreateNewJournalDialog = function(ev, tempPlannedID, tempSupervisionID){
+        $mdDialog.show(
+            {
+                controller: "CreateNewJournalDialogController",
+                templateUrl : 'html/createNewJournal.html',
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                clickOutsideToClose: true,
+                locals:{
+                    plannedID : tempPlannedID,
+                    supervisionID : tempSupervisionID
+                }
+            }
+        )
+    };
+
+    $scope.showCreateNewStatusDialog = function(ev, tempPlannedID, tempJournalID, tempSupervisionID){
+        $mdDialog.show(
+            {
+                controller: "CreateNewStatusDialogController",
+                templateUrl : 'html/createNewStatus.html',
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                clickOutsideToClose: true,
+                locals:{
+                    plannedID : tempPlannedID,
+                    supervisionID : tempSupervisionID,
+                    journalID : tempJournalID
+                }
+            }
+        )
+    };
+
+
+}])
+.controller('CreateStudentDialogController', function(userID, Supervision, $scope, $rootScope, $mdDialog){
 
 
         $scope.types =['Undergraduate','Postgraduate','PHD'];
+        console.log(Supervision);
         $scope.userID = userID;
         
         $scope.hide = function() {
-        $mdDialog.hide();
+            $mdDialog.hide();
         };
 
         $scope.cancel = function() {
-        $mdDialog.cancel();
+            $mdDialog.cancel();
         };
 
         $scope.answer = function(answer) {
-        $mdDialog.hide(answer);
+            $mdDialog.hide(answer);
         };
 
         $scope.submit = function(){
@@ -266,45 +305,25 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
                 userID : $scope.userID
             };
 
-            console.log(supervisionReqBody);
-             
-             $http(
-                {
-                    method: 'POST',
-                    url: 'http://localhost:8080/apis/supervision',
-                    data : supervisionReqBody,
-                    headers:{
-                        'Content-Type':'application/json'
+            Supervision
+            .callPostAPI(supervisionReqBody)
+            .then(
+                function successCallback(response){
+                    
+                    if(response.status == 201){
+                        $rootScope.$broadcast('NewUserCreated');
+                        $scope.cancel();
                     }
-                }
-            )//.then(function successCallback(response,$rootScope,$injector){
-            .success(function(data){
                     
-                    $scope.newSupervision = data;
-                    $rootScope.$broadcast('NewUserCreated');
-                    $scope.cancel();
-                    
-            });
-    };
-    };
+                },
+                function errorCallBack(response){
 
-    $scope.showCreateJournalPlanDialog = function(ev, selectedMonth){
-        $mdDialog.show(
-            {
-                controller: CreateJournalPlanDialogController,
-                templateUrl : 'html/createJournalPlan.html',
-                parent: angular.element(document.body),
-                targetEvent: ev,
-                clickOutsideToClose: true,
-                locals:{
-                    supervisions: $scope.supervisions,
-                    month: selectedMonth
                 }
-            }
-        )
+            );
     };
-
-    function CreateJournalPlanDialogController(supervisions,month, $scope,$rootScope, $mdDialog) {
+    
+})
+.controller('CreateJournalPlanDialogController',function(PlannedJournal, supervisions, month, $scope, $rootScope, $mdDialog) {
 
         $scope.supervisions = supervisions;
         
@@ -331,47 +350,27 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
                 plannedNumber: $scope.noOfJournal
             };
 
-            console.log(plannedJournalReqBody);
-             
-             $http(
-                {
-                    method: 'POST',
-                    url: 'http://localhost:8080/apis/plannedjournals',
-                    data : plannedJournalReqBody,
-                    headers:{
-                        'Content-Type':'application/json'
+            PlannedJournal
+            .callPostAPI(plannedJournalReqBody)
+            .then(
+                function successCallBack(response){
+                    
+                    if(response.status == 201){
+                        $rootScope.$broadcast('NewJournalPlanCreated', 
+                            {
+                                selectedSupervisionID: $scope.selectedStudent.supervisionID
+                            });
+                        $scope.cancel();
                     }
-                }
-            )//.then(function successCallback(response,$rootScope,$injector){
-            .success(function(data){
                     
-                    $rootScope.$broadcast('NewJournalPlanCreated', 
-                        {
-                            selectedSupervisionID: $scope.selectedStudent.supervisionID
-                        });
-                    $scope.cancel();
-                    
-            });
-    };
-    };
+                },
+                function errorCallBack(response){
 
-     $scope.showCreateNewJournalDialog = function(ev, tempPlannedID, tempSupervisionID){
-        $mdDialog.show(
-            {
-                controller: CreateNewJournalDialogController,
-                templateUrl : 'html/createNewJournal.html',
-                parent: angular.element(document.body),
-                targetEvent: ev,
-                clickOutsideToClose: true,
-                locals:{
-                    plannedID : tempPlannedID,
-                    supervisionID : tempSupervisionID
                 }
-            }
-        )
+            );
     };
-
-    function CreateNewJournalDialogController(plannedID,supervisionID, $scope,$rootScope, $mdDialog) {
+})
+.controller('CreateNewJournalDialogController', function(Journal, plannedID, supervisionID, $scope, $rootScope, $mdDialog){
 
         $scope.plannedID = plannedID;
         $scope.supervisionID = supervisionID;
@@ -407,19 +406,10 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
                 plannedID : $scope.plannedID
             };
 
-            console.log(newJournalReqBody);
-             
-             $http(
-                {
-                    method: 'POST',
-                    url: 'http://localhost:8080/apis/journals',
-                    data : newJournalReqBody,
-                    headers:{
-                        'Content-Type':'application/json'
-                    }
-                }
-            )//.then(function successCallback(response,$rootScope,$injector){
-            .success(function(data){
+            Journal
+            .callPostAPI(newJournalReqBody)
+            .then(
+                function successCallBack(response){
                     
                     $rootScope.$broadcast('NewJournalCreated', 
                         {
@@ -427,28 +417,15 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
                         });
                     $scope.cancel();
                     
-            });
-    };
-    };
+                },
+                function errorCallBack(response){
 
-    $scope.showCreateNewStatusDialog = function(ev, tempPlannedID, tempJournalID, tempSupervisionID){
-        $mdDialog.show(
-            {
-                controller: CreateNewStatusDialogController,
-                templateUrl : 'html/createNewStatus.html',
-                parent: angular.element(document.body),
-                targetEvent: ev,
-                clickOutsideToClose: true,
-                locals:{
-                    plannedID : tempPlannedID,
-                    supervisionID : tempSupervisionID,
-                    journalID : tempJournalID
                 }
-            }
-        )
+            );
     };
-
-    function CreateNewStatusDialogController(plannedID, journalID, supervisionID, $scope,$rootScope, $mdDialog) {
+    
+}).
+controller('CreateNewStatusDialogController', function(plannedID, journalID, supervisionID, $scope,$rootScope, $mdDialog){
 
         $scope.plannedID = plannedID;
         $scope.supervisionID = supervisionID;
@@ -506,10 +483,10 @@ function($scope,$mdDialog,$http,$rootScope,$state,$stateParams){
                     
             // });
     };
-    };
-
-
-}])
-.controller('CreateSupervisionCtrl',['$scope', function($scope){
     
-}]);
+});
+
+
+
+
+

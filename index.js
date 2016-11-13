@@ -6,7 +6,7 @@ var router = express.Router();
 var server = require('http').Server(app);
 var serverPort = 8080 ;
 var mysql = require('mysql');
-var sequelize = new Sequelize('jrnlmgmt', 'root', '', {
+var sequelize = new Sequelize('jrnlmgmt', 'root', 'TestUser123', {
     host: 'localhost',
     dialect: 'mysql',
 
