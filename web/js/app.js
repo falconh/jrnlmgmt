@@ -90,12 +90,11 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
             }
         }
 
-        console.log(plannedJournals);
-
         return plannedJournals;
     };
 
-    var addJournals = function(journals,$scope){
+    var addJournals = function(plannedjournals,$scope){
+
 
         var tempProcessedPlannedJournals = $scope.processedPlannedJournals;
         for(var i = 1 ; i <= 12 ; i++){
@@ -103,32 +102,34 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
                     var tempPlaceHolder = tempProcessedPlannedJournals[$scope.months[i]][plannedjournal];
                     console.log(tempPlaceHolder);
                     tempPlaceHolder.journals = [];
-                    for(var journal in journals){
-                        for(var tempProgress in journals[journal].progress){
-                            if(journals[journal].progress[tempProgress].plannedID == tempPlaceHolder.plannedID){
-                                tempPlaceHolder.journals.push(journals[journal]);
-                                break;
-                            }
+
+                    for(var tempPlannedJournal in plannedjournals){
+                        if(plannedjournals[tempPlannedJournal].plannedID == tempPlaceHolder.plannedID){
+                            tempPlaceHolder.journals = plannedjournals[tempPlannedJournal].journals;
+                            break;
                         }
+                    }
+                    
                     tempProcessedPlannedJournals[$scope.months[i]][plannedjournal] = tempPlaceHolder;
-                }
             }
         }
-        console.log(tempProcessedPlannedJournals);
         return tempProcessedPlannedJournals;
     }
 
-    $scope.callPlannedJournalsGetAPI = function(supervisionID){
+    $scope.callPlannedJournalsGetAPI = function(supervisionIDs){
+
 
                 PlannedJournal
-                .callGetAPI(supervisionID)
+                .callGetAPI(supervisionIDs)
                 .then(
                     function successCallBack(response){
 
                         if(response.status == 200){
 
+                            console.log(response.data);
+
                             $scope.processedPlannedJournals = processPlannedJournals(response.data,$scope);
-                            $scope.callJournalsGetAPI(supervisionID);
+                            $scope.callJournalsGetAPI(supervisionIDs);
                         }
                     
                     },
@@ -139,10 +140,10 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
     };
 
 
-    $scope.callJournalsGetAPI = function(supervisionID){
+    $scope.callJournalsGetAPI = function(supervisionIDs){
                 
                 Journal
-                .callGetAPI(supervisionID)
+                .callGetAPI(supervisionIDs)
                 .then(
                     function successCallBack(response){
 
@@ -168,7 +169,13 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
                 if(response.status == 200){
                     $scope.supervisions = response.data;
                     if(response.data !== null && response.data.length > 0){
-                        $scope.callPlannedJournalsGetAPI($scope.supervisions[0].supervisionID);
+
+                        var supervisionIDs = [];
+
+                        for(var supervision in $scope.supervisions){
+                            supervisionIDs.push($scope.supervisions[supervision].supervisionID);
+                        }
+                        $scope.callPlannedJournalsGetAPI(supervisionIDs);
                     }
                 }
             },

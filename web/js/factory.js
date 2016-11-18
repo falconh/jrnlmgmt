@@ -2,12 +2,25 @@ angular.module('myApp.factory',[])
 .factory('PlannedJournal', ['$http', '$q', function($http, $q){
 	return {
 		callGetAPI : function(supervisionID){
+
+			if(!(supervisionID instanceof Array)){
+				supervisionID = supervisionID.toString().split(",");
+			}
 			
+			var supervisionList = "";
+
+			for(var i = 0 ; i < supervisionID.length ; i++){
+				supervisionList += supervisionID[i];
+
+				if(i != supervisionID.length){
+					supervisionList += ",";
+				}
+			}
 
 			return	$http(
 	                    {
 	                        method: 'GET',
-	                        url: 'http://localhost:8080/apis/plannedjournals?supervisionID=' + supervisionID
+	                        url: 'http://localhost:8080/apis/plannedjournals?supervisionID=' + supervisionList
 	                    }
 	                ).then(
 	                	function successCallBack(response){

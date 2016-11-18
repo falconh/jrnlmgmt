@@ -6,7 +6,7 @@ var router = express.Router();
 var server = require('http').Server(app);
 var serverPort = 8080 ;
 var mysql = require('mysql');
-var sequelize = new Sequelize('jrnlmgmt', 'root', 'TestUser123', {
+var sequelize = new Sequelize('jrnlmgmt', 'root', '', {
     host: 'localhost',
     dialect: 'mysql',
 
@@ -387,7 +387,7 @@ router.route('/plannedjournals')
     
 })
 .get(function(req, res){
-    var tempSupervisionID = req.query.supervisionID;
+    var tempSupervisionID = req.query.supervisionID.split(",");
 
     console.log(req.param.supervisionID);
 
@@ -502,7 +502,7 @@ router.route('/journals')
     });
 })
 .get(function(req,res){
-    var tempSupervisionID = req.query.supervisionID;
+    var tempSupervisionID = req.query.supervisionID.split(",");
 
      PlannedJournals.findAll({
         where:{
@@ -532,21 +532,57 @@ router.route('/journals')
                     journalID: journalIDs
                 }
             }).then(function(journals){
-                var tempJournals = [];
 
-                for(var journal in journals){
-                    tempJournals[journal] = journals[journal].get({plain:true});
-                    tempJournals[journal].progress = [];
+                for(var plannedjournal in plannedjournals){
+
+                    var tempPlannedJournal = plannedjournals[plannedjournal].get({plain:true});
+                    tempPlannedJournal.journals = [];
+                    var tempJournalIds = [];
+
                     for(var journalProgress in journalProgresses){
-                        if(tempJournals[journal].journalID == journalProgresses[journalProgress].journalID){
-                            tempJournals[journal].progress.push(journalProgresses[journalProgress]);
+
+                        var tempJournalProgress = journalProgresses[journalProgress].get({plain:true});
+
+                        if(tempJournalProgress.plannedID == 
+                            tempPlannedJournal.plannedID){
+                            if(tempJournalIds.indexOf(tempJournalProgress.journalID) == -1)
+                                tempJournalIds.push(tempJournalProgress.journalID);
                         }
                     }
+
+
+                    for(var tempJournalId in tempJournalIds){
+                        for(var journal in journals){
+                            var tempJournal = journals[journal].get({plan:true});
+                            if(tempJournal.journalID == tempJournalIds[tempJournalId]){
+                                tempPlannedJournal.journals.push(tempJournal);
+                                break;
+                            }
+                        }
+                    }
+
+                    for( var journal in tempPlannedJournal.journals){
+                        var tempJournal = tempPlannedJournal.journals[journal];
+                        tempJournal.progress = [];
+
+                        for( var journalProgress in journalProgresses){
+                            var tempJournalProgress = journalProgresses[journalProgress].get({plain:true});
+                            if(tempJournalProgress.plannedID == 
+                                tempPlannedJournal.plannedID){
+                                tempJournal.progress.push(tempJournalProgress);
+                            }
+                        }
+
+                        tempPlannedJournal.journals[journal] = tempJournal;
+                    }
+
+                    plannedjournals[plannedjournal] = tempPlannedJournal;
+
                 }
 
-                console.log(tempJournals);
+                //console.log(plannedjournals);
                 
-                res.json(tempJournals);
+                res.json(plannedjournals);
             });
         });
             

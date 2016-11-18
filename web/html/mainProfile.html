@@ -11,7 +11,9 @@
                     ng-click="callPlannedJournalsGetAPI(supervision.supervisionID)">
                     {{supervision.student.studentName}}
                 </md-sidemenu-button>
-                <!--<md-sidemenu-button href="#">All</md-sidemenu-button>-->
+                <md-sidemenu-button ng-click="callSupervisionsGetAPI(userID)" ng-if="supervisions.length > 0">
+                    All
+                </md-sidemenu-button>
                 <md-sidemenu-button ng-click=showCreateStudentDialog($event)>
                     <span style="font-weight:bolder">+ Create new supervision</span>
                 </md-sidemenu-button>
