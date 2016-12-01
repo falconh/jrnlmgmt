@@ -1,5 +1,5 @@
 <md-dialog id='newStatusCard'>
-    <form name="newStatusForm" ng-submit = 'submit()'>
+    <form ng-model='newStatusForm' name="newStatusForm" enctype="multipart/form-data" ng-submit = 'submit()'>
         <md-toolbar>
             <div class="md-toolbar-tools">
                 <h2>Create New Journal</h2>
@@ -13,7 +13,7 @@
             <div class="md-dialog-content">
                     <md-input-container class="md-block">
                         <label>Status</label>
-                        <md-select ng-model='selectedStatus' required>
+                        <md-select ng-model='selectedStatus' name='selectedStatus' required>
                             <md-option ng-value="status" ng-repeat="status in statusList">
                                 {{status}}
                             </md-option>
@@ -23,10 +23,16 @@
                     </md-input-container>
 
                     <md-input-container class="md-block">
-                        <label>Note</label>
-                        <textarea ng-model='proof' required md-maxlength="250" rows="3" md-select-on-focus>
+                        <label>Progress Proof</label>
+                        <br>
+                        <lf-ng-md-file-input lf-files="progressProof" aria-label="fileupload"></lf-ng-md-file-input>
+                    </md-input-container>
+
+                    <md-input-container class="md-block">
+                        <label>Description</label>
+                        <textarea ng-model='description' name='description' md-maxlength="250" rows="3" md-select-on-focus>
                         </textarea>
-                        <div ng-messages="newStatusForm.proof.$error">
+                        <div ng-messages="newStatusForm.description.$error">
                             <div ng-message='required'>This is required.</div>
                         </div>
                     </md-input-container>

@@ -162,20 +162,60 @@
                                                                                     <md-expansion-panel ng-repeat="progress in journal.progress">
                                                                                         <md-expansion-panel-collapsed>
                                                                                             <div class="md-title">{{progress.status}}</div>
-                                                                                            <div class="md-summary">{{progress.createdDate}}</div>
+                                                                                            <div class="md-summary">
+                                                                                                {{progress.createdDate}}
+                                                                                            </div>
                                                                                         </md-expansion-panel-collapsed>
 
                                                                                         <md-expansion-panel-expanded>
                                                                                             <md-expansion-panel-header>
-                                                                                                <div class="md-title">Journal Details</div>
-                                                                                                <md-expansion-panel-icon></md-expansion-panel-icon>
+                                                                                                <div class="md-title"> Status Details</div>
+                                                                                                <md-expansion-panel-icon> 
+                                                                                                </md-expansion-panel-icon>
                                                                                             </md-expansion-panel-header>
 
                                                                                             <md-expansion-panel-content>
+                                                                                                <div flex>
+                                                                                                    <form name="statusDetailForm">
+                                                                                                        <md-dialog-content>
+                                                                                                            <div class="md-dialog-content">
+                                                                                                                <md-input-container class="md-block">
+                                                                                                                    <label>Status</label>
+                                                                                                                    <input name='statusName' ng-model='progress.status' disabled>
+                                                                                                                    <!--<div ng-messages="studentForm.studentId.$error">
+                                                                                                                        <div ng-message='required'>This is required.</div>
+                                                                                                                    </div>-->
+                                                                                                                </md-input-container>
+
+                                                                                                                <md-input-container class="md-block">
+                                                                                                                    <label>Created Date</label>
+                                                                                                                    <input name='createdDate' ng-model='progress.createdDate' disabled>
+                                                                                                                    <!--<div ng-messages="studentForm.studentId.$error">
+                                                                                                                        <div ng-message='required'>This is required.</div>
+                                                                                                                    </div>-->
+                                                                                                                </md-input-container>
+
+                                                                                                                <md-input-container class="md-block">
+                                                                                                                    <label>Description</label>
+                                                                                                                    <input name='statusDescription' ng-model='progress.description' disabled>
+                                                                                                                    <!--<div ng-messages="studentForm.studentId.$error">
+                                                                                                                        <div ng-message='required'>This is required.</div>
+                                                                                                                    </div>-->
+                                                                                                                </md-input-container>
+                                                                                                                
+                                                                                                            </div>
+                                                                                                        </md-dialog-content>
+                                                                                                    </form>
+                                                                                                    </div>
+
+
                                                                                             </md-expansion-panel-content>
 
                                                                                             <md-expansion-panel-footer>
                                                                                                 <div flex></div>
+                                                                                                <md-button class="md-primary" href="http://localhost:8080/apis/file/{{progress.fileMetadata.fileID}}" ng-if='progress.fileMetadata != null'>
+                                                                                                    Download Proof
+                                                                                                </md-button>
                                                                                                 <md-button class="md-warn" ng-click="$panel.collapse()">Collapse</md-button>
                                                                                             </md-expansion-panel-footer>
                                                                                         </md-expansion-panel-expanded>
@@ -189,7 +229,7 @@
                                                         <md-expansion-panel-footer>
                                                             <div flex></div>
                                                             <md-button class="md-primary"
-                                                                ng-click="showCreateNewStatusDialog($event,processed.plannedID,1,processed.supervisionID)">
+                                                                ng-click="showCreateNewStatusDialog($event,processed.plannedID,journal.journalID,processed.supervisionID)">
                                                                 Update Status
                                                             </md-button>
                                                             <md-button class="md-warn" ng-click="$panel.collapse()">Collapse</md-button>

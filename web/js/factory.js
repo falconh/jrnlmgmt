@@ -10,11 +10,12 @@ angular.module('myApp.factory',[])
 			var supervisionList = "";
 
 			for(var i = 0 ; i < supervisionID.length ; i++){
-				supervisionList += supervisionID[i];
 
-				if(i != supervisionID.length){
+				if(i != 0){
 					supervisionList += ",";
 				}
+
+				supervisionList += supervisionID[i];
 			}
 
 			return	$http(
@@ -24,6 +25,8 @@ angular.module('myApp.factory',[])
 	                    }
 	                ).then(
 	                	function successCallBack(response){
+
+	           
 	                		return response;
 	                	},
 	                	function errorCallback(response){
@@ -169,6 +172,62 @@ angular.module('myApp.factory',[])
 						};
 
 	return service ;
+}])
+.factory('JournalProgress', ['$http', '$q', function($http, $q){
+	return {
+		callPostAPI : function(tempStatus, tempDescription, tempFile, tempPlannedID, tempJournalID){
+
+			console.log(tempStatus, tempDescription, tempFile, tempPlannedID, tempJournalID);
+
+			var fd = new FormData();
+			fd.append('plannedID', tempPlannedID);
+			fd.append('journalID', tempJournalID);
+			fd.append('status', tempStatus);
+			fd.append('description', tempDescription);
+			angular.forEach(tempFile, function(obj){
+				fd.append('progressProof', obj.lfFile);
+			});
+			var apiURL = 'http://localhost:8080/apis/journalprogress';
+
+			console.log(fd.getAll('progressProof'));
+
+			return $http.post(apiURL, fd, {
+						transformRequest: angular.identity,
+						headers: {
+							'Content-Type' : undefined
+						}
+					}).then(
+						function successCallBack(response){
+							return response;
+						},
+						function errorCallBack(response){
+							return response;
+						}
+					);
+		}
+	};
+}])
+.factory('File', ['$http', '$q', function($http, $q){
+	return {
+		callGetAPI : function(fileID){
+
+			return $http(
+						{
+							method: 'GET',
+							url: 'http://localhost:8080/apis/file/' + fileID
+
+						}
+					)
+					.then(
+						function successCallBack(response){
+							return response;
+						},
+						function errorCallBack(response){
+							return response;
+						}
+					);
+		}
+	};
 }])
 .factory('SharedData', function(){
 	return {

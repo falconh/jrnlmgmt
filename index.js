@@ -2,11 +2,27 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var Sequelize = require('sequelize');
 var app = express();
+var multer = require('multer');
+var progressProofStorage = multer.diskStorage({
+    destination : function(req, file, callback){
+        callback(null, './progress-proof-uploads');
+    },
+    filename : function(req, file, callback){
+        callback(null, Date.now() + "-" +  file.originalname );
+    }
+});
+
+var progressProofUpload = multer({storage : progressProofStorage}).fields([
+    {
+        name : 'progressProof',
+        maxCount : 1
+    }
+]);
 var router = express.Router(); 
 var server = require('http').Server(app);
 var serverPort = 8080 ;
 var mysql = require('mysql');
-var sequelize = new Sequelize('jrnlmgmt', 'root', '', {
+var sequelize = new Sequelize('jrnlmgmt', 'root', 'TestUser123', {
     host: 'localhost',
     dialect: 'mysql',
 
@@ -197,14 +213,39 @@ var JournalProgress = sequelize.define('JRNLPRGSS_TBL',{
         type: Sequelize.STRING,
         field: 'JRNLPRGSS_STATUS'
     },
-    proof: {
+    description: {
         type: Sequelize.STRING,
-        field: 'JRNLPRGSS_PROOF'
+        field: 'JRNLPRGSS_DSCRP'
+    },
+    proof: {
+        type: Sequelize.INTEGER,
+        field: 'JRNLPRGSS_PRF'
     }
 },{
     timestamps: false,
     freezeTableName: true,
     tableName: 'JRNLPRGSS_TBL'
+});
+
+var FileMetadata = sequelize.define('FLMD_TBL', {
+    fileID: {
+        type: Sequelize.INTEGER,
+        field: 'FLMD_ID',
+        primaryKey : true,
+        autoIncrement : true
+    },
+    fileLocation: {
+        type: Sequelize.STRING,
+        field: 'FLMD_LOC'
+    },
+    fileOriginalName: {
+        type: Sequelize.STRING,
+        field: 'FLMD_ORIGINALNM'
+    }
+},{
+    timestamps: false,
+    freezeTableName: true,
+    tableName: 'FLMD_TBL'
 });
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -405,8 +446,10 @@ router.route('/plannedjournals')
             for(var plannedjournal in plannedjournals){
                 var tempMonth = new Date(plannedjournals[plannedjournal].plannedDate).getMonth();
                 console.log(months[tempMonth]);
-                resStructure[months[tempMonth]].push(plannedjournals[plannedjournal]);
+                resStructure[months[tempMonth]].push(plannedjournals[plannedjournal].get({plain: true}));
             }
+
+            console.log(resStructure);
 
             res.json(resStructure);
         });
@@ -452,7 +495,8 @@ router.route('/journals')
                     defaults:{
                         createdDate: tempCreatedDate,
                         status: "Incomplete",
-                        proof: "NULL"
+                        description : "Generated status when journal was created",
+                        proof: null
                     }
                 }).spread(function(journalProgress,created){
                     if(!created){
@@ -481,7 +525,8 @@ router.route('/journals')
                     defaults:{
                         createdDate: tempCreatedDate,
                         status: "Incomplete",
-                        proof: "NULL"
+                        description : "Status generated when journal was being created",
+                        proof: null
                     }
                 }).spread(function(journalProgress,created){
                     if(!created){
@@ -523,8 +568,18 @@ router.route('/journals')
 
             var journalIDs = [];
 
+            var fileIDs = [];
+
             for( var journalProgress in journalProgresses ){
-                journalIDs.push(journalProgresses[journalProgress].journalID);
+
+                if(journalIDs.indexOf(journalProgresses[journalProgress].journalID) == -1){
+                    journalIDs.push(journalProgresses[journalProgress].journalID);
+                }
+
+                if(fileIDs.indexOf(journalProgresses[journalProgress].proof) == -1){
+                    fileIDs.push(journalProgresses[journalProgress].proof);
+                }
+
             }
 
             Journal.findAll({
@@ -533,97 +588,83 @@ router.route('/journals')
                 }
             }).then(function(journals){
 
-                for(var plannedjournal in plannedjournals){
-
-                    var tempPlannedJournal = plannedjournals[plannedjournal].get({plain:true});
-                    tempPlannedJournal.journals = [];
-                    var tempJournalIds = [];
-
-                    for(var journalProgress in journalProgresses){
-
-                        var tempJournalProgress = journalProgresses[journalProgress].get({plain:true});
-
-                        if(tempJournalProgress.plannedID == 
-                            tempPlannedJournal.plannedID){
-                            if(tempJournalIds.indexOf(tempJournalProgress.journalID) == -1)
-                                tempJournalIds.push(tempJournalProgress.journalID);
-                        }
+                FileMetadata.findAll({
+                    where: {
+                        fileID: fileIDs
                     }
+                }).then(function(files){
 
+                    for(var plannedjournal in plannedjournals){
 
-                    for(var tempJournalId in tempJournalIds){
-                        for(var journal in journals){
-                            var tempJournal = journals[journal].get({plan:true});
-                            if(tempJournal.journalID == tempJournalIds[tempJournalId]){
-                                tempPlannedJournal.journals.push(tempJournal);
-                                break;
-                            }
-                        }
-                    }
+                        var tempPlannedJournal = plannedjournals[plannedjournal].get({plain:true});
+                        tempPlannedJournal.journals = [];
+                        var tempJournalIds = [];
 
-                    for( var journal in tempPlannedJournal.journals){
-                        var tempJournal = tempPlannedJournal.journals[journal];
-                        tempJournal.progress = [];
+                        for(var journalProgress in journalProgresses){
 
-                        for( var journalProgress in journalProgresses){
                             var tempJournalProgress = journalProgresses[journalProgress].get({plain:true});
+
+                            for(var file in files){
+                                var tempFile = files[file].get({plan: true});
+                                if(tempJournalProgress.proof == tempFile.fileID){
+                                    tempJournalProgress.fileMetadata = tempFile ;
+                                    break;
+                                }
+                            }
+
                             if(tempJournalProgress.plannedID == 
                                 tempPlannedJournal.plannedID){
-                                tempJournal.progress.push(tempJournalProgress);
+                                if(tempJournalIds.indexOf(tempJournalProgress.journalID) == -1)
+                                    tempJournalIds.push(tempJournalProgress.journalID);
                             }
                         }
 
-                        tempPlannedJournal.journals[journal] = tempJournal;
+
+                        for(var tempJournalId in tempJournalIds){
+                            for(var journal in journals){
+                                var tempJournal = journals[journal].get({plan:true});
+                                if(tempJournal.journalID == tempJournalIds[tempJournalId]){
+                                    tempPlannedJournal.journals.push(tempJournal);
+                                    break;
+                                }
+                            }
+                        }
+
+                        for( var journal in tempPlannedJournal.journals){
+                            var tempJournal = tempPlannedJournal.journals[journal];
+                            tempJournal.progress = [];
+
+                            for( var journalProgress in journalProgresses){
+                                var tempJournalProgress = journalProgresses[journalProgress].get({plain:true});
+                                var tempDate = new Date(tempJournalProgress.createdDate);
+                                tempJournalProgress.createdDate = tempDate.toString();
+                                if(tempJournalProgress.plannedID == 
+                                    tempPlannedJournal.plannedID &&
+                                    tempJournalProgress.journalID == tempJournal.journalID){
+                                    tempJournal.progress.push(tempJournalProgress);
+                                }
+                            }
+
+                            tempPlannedJournal.journals[journal] = tempJournal;
+                        }
+
+                        plannedjournals[plannedjournal] = tempPlannedJournal;
+
                     }
 
-                    plannedjournals[plannedjournal] = tempPlannedJournal;
-
-                }
-
-                //console.log(plannedjournals);
+                console.log(plannedjournals);
                 
                 res.json(plannedjournals);
+
+                });
+
             });
         });
             
         });
-
-    // JournalProgress.findAll({
-    //     where:{
-    //         plannedID: parseInt(tempPlannedID)
-    //     }
-    // }).then(function(journalProgresses){
-
-    //     var journalIDs = [];
-
-    //     for( var journalProgress in journalProgresses ){
-    //         journalIDs.push(journalProgresses[journalProgress].journalID);
-    //     }
-
-    //     Journal.findAll({
-    //         where: {
-    //             journalID: journalIDs
-    //         }
-    //     }).then(function(journals){
-    //         var tempJournals = [];
-
-    //         for(var journal in journals){
-    //             tempJournals[journal] = journals[journal].get({plain:true});
-    //             tempJournals[journal].progress = [];
-    //             for(var journalProgress in journalProgresses){
-    //                 if(tempJournals[journal].journalID == journalProgresses[journalProgress].journalID){
-    //                     tempJournals[journal].progress.push(journalProgresses[journalProgress]);
-    //                 }
-    //             }
-    //         }
-
-    //         console.log(tempJournals);
-            
-    //         res.json(tempJournals);
-    //     });
-    // });
-
+  
 });
+
 
 router.route('/journals/:journalID')
 .get(function(req,res){
@@ -631,6 +672,110 @@ router.route('/journals/:journalID')
 
     Journal.findById(parseInt(tempJournalID)).then(function(journal){
         res.json(journal);
+    });
+});
+
+router.route('/journalprogress')
+.post(function(req,res){
+    progressProofUpload(req, res, function(err){
+        if(err){
+
+                        var errorRes = {
+                            error:{
+                                code: '500',
+                                message : 'Failed to upload progress proof'
+                            }
+                        };
+
+            res.status(500).json(errorRes);
+
+        }else{
+            var tempPlannedID = req.body.plannedID ;
+            var tempJournalID = req.body.journalID ;
+            var tempDescription = req.body.description ;
+            var tempStatus = req.body.status;
+            var tempFile = req.files['progressProof'][0];
+
+            console.log(tempFile);
+
+            FileMetadata
+                .build({ fileLocation : tempFile.path , fileOriginalName : tempFile.originalname })
+                .save()
+                .then(function(createdFile){
+                    JournalProgress
+                        .build({ 
+                            plannedID : tempPlannedID,
+                            journalID : tempJournalID,
+                            createdDate : new Date(),
+                            description : tempDescription,
+                            status : tempStatus,
+                            proof : createdFile.fileID
+                        })
+                        .save()
+                        .then(function(createdJournalProgress){
+                            res.status(201).json(createdJournalProgress);
+                        })
+                        .catch(function(error){
+                            var errorRes = {
+                                error : {
+                                    code : '500',
+                                    message : 'Failed to create new journal progress'
+                                }
+                            };
+
+                            res.status(500).json(errorRes);
+
+                        });
+                })
+                .catch(function(error){
+                    var errorRes = {
+                        error: {
+                            code : '500',
+                            message : 'Failed to create new file metadata'
+                        }
+                    };
+
+                    res.status(500).json(errorRes);
+                });
+
+        }
+
+
+    });
+});
+
+router.route('/file/:fileID')
+.get(function(req, res){
+    var tempFileID = req.params.fileID;
+
+    console.log(tempFileID);
+
+    FileMetadata.findById(parseInt(tempFileID))
+    .then(function(file){
+        var tempFile = file.get({plan: true});
+        console.log(__dirname + "/" + file.fileLocation)
+        res.download(__dirname + "/" + file.fileLocation, file.fileOriginalName, function(error){
+            if(error){
+                var errorRes = {
+                    error : {
+                        code : '500',
+                        message : 'Unable to download file from the server'
+                    }
+                };
+
+                res.status(500).json(errorRes);
+            }
+        });
+    })
+    .catch(function(error){
+        var errorRes = {
+            error : {
+                code : '404',
+                message : 'File not found'
+            }
+        };
+        console.log(error);
+        res.status(404).json(errorRes);
     });
 });
 

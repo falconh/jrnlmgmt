@@ -1,5 +1,6 @@
 'use strict';
-angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','ngMaterialSidemenu','material.components.expansionPanels'])
+angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
+    'ngMaterialSidemenu','material.components.expansionPanels', 'lfNgMdFileInput'])
 .config(function($mdThemingProvider){
     $mdThemingProvider.theme('default')
     .primaryPalette('blue')
@@ -61,9 +62,9 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
     };
 }])
 .controller('MainDisplayCtrl', ['$scope','$mdDialog','$rootScope','$state',
-    '$stateParams','PlannedJournal','Journal','Supervision', 'SharedData',
+    '$stateParams','PlannedJournal','Journal','Supervision', 'File', 'SharedData', 
     function($scope, $mdDialog, $rootScope, $state, $stateParams, 
-        PlannedJournal, Journal, Supervision, SharedData){
+        PlannedJournal, Journal, Supervision, File, SharedData){
 
     console.log(SharedData);
 
@@ -79,7 +80,7 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
     }
 
     var processPlannedJournals = function(plannedJournals,$scope){
-        for(var i = 1 ; i <= 12 ; i++){
+        for(var i = 0 ; i < 12 ; i++){
             for(var plannedjournal in plannedJournals[$scope.months[i]]){
                 for(var supervision in $scope.supervisions){
                     if($scope.supervisions[supervision].supervisionID == plannedJournals[$scope.months[i]][plannedjournal].supervisionID){
@@ -97,10 +98,9 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
 
 
         var tempProcessedPlannedJournals = $scope.processedPlannedJournals;
-        for(var i = 1 ; i <= 12 ; i++){
+        for(var i = 0 ; i < 12 ; i++){
             for(var plannedjournal in tempProcessedPlannedJournals[$scope.months[i]]){
                     var tempPlaceHolder = tempProcessedPlannedJournals[$scope.months[i]][plannedjournal];
-                    console.log(tempPlaceHolder);
                     tempPlaceHolder.journals = [];
 
                     for(var tempPlannedJournal in plannedjournals){
@@ -126,10 +126,9 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
 
                         if(response.status == 200){
 
-                            console.log(response.data);
-
                             $scope.processedPlannedJournals = processPlannedJournals(response.data,$scope);
                             $scope.callJournalsGetAPI(supervisionIDs);
+                            console.log($scope.processedPlannedJournals);
                         }
                     
                     },
@@ -148,6 +147,7 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
                     function successCallBack(response){
 
                         if(response.status == 200){
+
                             $scope.processedPlannedJournals = addJournals(response.data,$scope);
                         }
                     
@@ -186,7 +186,7 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
     };
 
     $rootScope.$on('NewUserCreated',function(){
-        callSupervisionsGetAPI(SharedData.user.userID);
+        $scope.callSupervisionsGetAPI($scope.userID);
     });
 
     $rootScope.$on('NewJournalPlanCreated',function(event, args){
@@ -194,6 +194,10 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
     });
 
      $rootScope.$on('NewJournalCreated',function(event, args){
+        $scope.callPlannedJournalsGetAPI(args.selectedSupervisionID);
+    });
+
+     $rootScope.$on('NewStatusCreated',function(event, args){
         $scope.callPlannedJournalsGetAPI(args.selectedSupervisionID);
     });
 
@@ -280,12 +284,26 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
         )
     };
 
+    $scope.downloadProof = function(fileID){
+        File.callGetAPI(fileID)
+        .then(
+            function successCallBack(response){
+                
+
+            });
+    }
+
 
 }])
 .controller('CreateStudentDialogController', function(userID, Supervision, $scope, $rootScope, $mdDialog){
 
 
-        $scope.types =['Undergraduate','Postgraduate','PHD'];
+        $scope.types =['Post-Doc', 
+                        'RA/RA+Student',
+                        'Bright Sparks',
+                        'PhD',
+                        'Master by Research Student',
+                        'Master by Coursework Student' ];
         console.log(Supervision);
         $scope.userID = userID;
         
@@ -418,11 +436,14 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
             .then(
                 function successCallBack(response){
                     
-                    $rootScope.$broadcast('NewJournalCreated', 
-                        {
-                            selectedSupervisionID: $scope.supervisionID
-                        });
-                    $scope.cancel();
+                    if(response.status == 201){
+
+                        $rootScope.$broadcast('NewJournalCreated', 
+                            {
+                                selectedSupervisionID: $scope.supervisionID
+                            });
+                        $scope.cancel();
+                    }
                     
                 },
                 function errorCallBack(response){
@@ -432,8 +453,10 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router','n
     };
     
 }).
-controller('CreateNewStatusDialogController', function(plannedID, journalID, supervisionID, $scope,$rootScope, $mdDialog){
+controller('CreateNewStatusDialogController', function(JournalProgress, plannedID, journalID, supervisionID, $scope,$rootScope, $mdDialog){
 
+
+        console.log(plannedID + "," + journalID +  "," + supervisionID);
         $scope.plannedID = plannedID;
         $scope.supervisionID = supervisionID;
         $scope.journalID = journalID;
@@ -460,35 +483,25 @@ controller('CreateNewStatusDialogController', function(plannedID, journalID, sup
 
         $scope.submit = function(){
 
+            console.log($scope.progressProof[0]);
 
-            var newJournalReqBody = {
-                plannedID : $scope.plannedID,
-                journalID : $scope.journalID,
-                status: $scope.selectedStatus,
-                proof : $scope.proof
-            };
+            JournalProgress
+            .callPostAPI($scope.selectedStatus, $scope.description, $scope.progressProof, $scope.plannedID, $scope.journalID)
+            .then(
+                function successCallBack(response){
 
-            console.log(newJournalReqBody);
-             
-            //  $http(
-            //     {
-            //         method: 'POST',
-            //         url: 'http://localhost:8080/apis/journals',
-            //         data : newJournalReqBody,
-            //         headers:{
-            //             'Content-Type':'application/json'
-            //         }
-            //     }
-            // )//.then(function successCallback(response,$rootScope,$injector){
-            // .success(function(data){
-                    
-            //         $rootScope.$broadcast('NewJournalCreated', 
-            //             {
-            //                 selectedSupervisionID: $scope.supervisionID
-            //             });
-            //         $scope.cancel();
-                    
-            // });
+                    if(response.status == 201){
+
+                        $rootScope.$broadcast('NewStatusCreated', 
+                            {
+                                selectedSupervisionID: $scope.supervisionID
+                            });
+                        $scope.cancel();
+                    }
+
+                }
+            );
+            
     };
     
 });
