@@ -4,7 +4,7 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
 .config(function($mdThemingProvider){
     $mdThemingProvider.theme('default')
     .primaryPalette('blue')
-    .accentPalette('orange');
+    .accentPalette('pink');
 })
 .run(function($rootScope){
     $rootScope.user = 0;
@@ -61,12 +61,19 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
        
     };
 }])
-.controller('MainDisplayCtrl', ['$scope','$mdDialog','$rootScope','$state',
+.controller('MainDisplayCtrl', ['$scope', '$mdSidenav', '$mdDialog','$rootScope','$state',
     '$stateParams','PlannedJournal','Journal','Supervision', 'File', 'SharedData', 
-    function($scope, $mdDialog, $rootScope, $state, $stateParams, 
+    function($scope, $mdSidenav, $mdDialog, $rootScope, $state, $stateParams, 
         PlannedJournal, Journal, Supervision, File, SharedData){
 
     console.log(SharedData);
+
+    $scope.sideNavIsOpen = true ;
+
+    $scope.toggleLeft = function(){
+        $scope.sideNavIsOpen = !$scope.sideNavIsOpen;
+        console.log($scope.sideNavIsOpen)
+    }
 
     $scope.userID = $stateParams.userID;
 
@@ -235,7 +242,7 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
         )
     };
 
-    $scope.showCreateJournalPlanDialog = function(ev, selectedMonth){
+    $scope.showCreateJournalPlanDialog = function(ev){
         $mdDialog.show(
             {
                 controller: "CreateJournalPlanDialogController",
@@ -245,7 +252,7 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
                 clickOutsideToClose: true,
                 locals:{
                     supervisions: $scope.supervisions,
-                    month: selectedMonth
+                    months: $scope.months
                 }
             }
         )
@@ -288,7 +295,7 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
         File.callGetAPI(fileID)
         .then(
             function successCallBack(response){
-                
+
 
             });
     }
@@ -348,9 +355,10 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
     };
     
 })
-.controller('CreateJournalPlanDialogController',function(PlannedJournal, supervisions, month, $scope, $rootScope, $mdDialog) {
+.controller('CreateJournalPlanDialogController',function(PlannedJournal, supervisions, months, $scope, $rootScope, $mdDialog, $mdToast) {
 
         $scope.supervisions = supervisions;
+        $scope.months = months;
         
         $scope.hide = function() {
             $mdDialog.hide();
@@ -367,7 +375,7 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
         $scope.submit = function(){
 
             var tempPlannedDate = new Date();
-            tempPlannedDate.setMonth(parseInt(month)-1);
+            tempPlannedDate.setMonth(parseInt(months.indexOf($scope.selectedMonth)));
 
             var plannedJournalReqBody = {
                 supervisionID : $scope.selectedStudent.supervisionID,
@@ -386,6 +394,15 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
                                 selectedSupervisionID: $scope.selectedStudent.supervisionID
                             });
                         $scope.cancel();
+                    }else{
+                        console.log("Toast");
+                        $mdToast.show(
+                            $mdToast
+                                .simple()
+                                .textContent('Failed to create new journal planning')
+                                .position('bottom right')
+                                .hideDelay(1500)
+                        );
                     }
                     
                 },

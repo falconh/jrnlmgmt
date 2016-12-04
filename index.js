@@ -22,7 +22,7 @@ var router = express.Router();
 var server = require('http').Server(app);
 var serverPort = 8080 ;
 var mysql = require('mysql');
-var sequelize = new Sequelize('jrnlmgmt', 'root', '', {
+var sequelize = new Sequelize('jrnlmgmt', 'root', 'TestUser123', {
     host: 'localhost',
     dialect: 'mysql',
 
@@ -424,7 +424,17 @@ router.route('/plannedjournals')
                 res.status(201).json(plannedjournals);
             }
 
-        });
+        })
+    .catch(function(error){
+        var errorRes = {
+            error: {
+                code : '500',
+                message : 'Failed to create new journal planning'
+            }
+        };
+
+        res.status(500).json(errorRes);
+    });
     
 })
 .get(function(req, res){

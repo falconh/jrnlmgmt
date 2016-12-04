@@ -24,6 +24,18 @@
                 </md-input-container>
 
                 <md-input-container class="md-block">
+                    <label>Month</label>
+                    <md-select ng-model='selectedMonth' 
+                        ng-model-options="{trackBy: '$value'}" required>
+                        <md-option ng-value="month" ng-repeat="month in months">
+                            {{month}}
+                        </md-option>
+                    <div ng-messages="studentForm.studentId.$error">
+                        <div ng-message='required'>This is required.</div>
+                    </div>
+                </md-input-container>
+
+                <md-input-container class="md-block">
                     <label>Number of Journal</label>
                     <input ng-model='noOfJournal' required>
                     <div ng-messages="studentForm.studentName.$error">
