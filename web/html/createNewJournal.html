@@ -11,10 +11,11 @@
         </md-toolbar>
         <md-dialog-content>
             <div class="md-dialog-content">
+
                 <md-input-container class="md-block">
-                    <label>Journal Name</label>
-                    <input ng-model='journalName' required>
-                    <div ng-messages="newJournalForm.journalName.$error">
+                    <label>Authors</label>
+                    <input ng-model='authors' required>
+                    <div ng-messages="newJournalForm.authors.$error">
                         <div ng-message='required'>This is required.</div>
                     </div>
                 </md-input-container>
@@ -28,12 +29,13 @@
                 </md-input-container>
 
                 <md-input-container class="md-block">
-                    <label>Authors</label>
-                    <input ng-model='authors' required>
-                    <div ng-messages="newJournalForm.authors.$error">
+                    <label>Journal Name</label>
+                    <input ng-model='journalName' required>
+                    <div ng-messages="newJournalForm.journalName.$error">
                         <div ng-message='required'>This is required.</div>
                     </div>
                 </md-input-container>
+
 
                <div layout="row">
                     <md-input-container class="md-block" flex="50">

@@ -573,7 +573,10 @@ router.route('/journals')
         JournalProgress.findAll({
             where:{
                 plannedID: tempPlannedID
-            }
+            },
+            order:[
+                ['JRNLPRGSS_ID', 'DESC']
+            ]
         }).then(function(journalProgresses){
 
             var journalIDs = [];

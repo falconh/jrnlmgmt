@@ -478,11 +478,11 @@ controller('CreateNewStatusDialogController', function(JournalProgress, plannedI
         $scope.supervisionID = supervisionID;
         $scope.journalID = journalID;
         $scope.statusList = [
-            'submmitted',
-            'accepted',
-            'minor revision',
-            'major revision',
-            'rejection'
+            'Submitted',
+            'Accepted',
+            'Minor Revision',
+            'Major Revision',
+            'Rejection'
         ];
 
         

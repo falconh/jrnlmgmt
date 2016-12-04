@@ -221,7 +221,7 @@
 
                                                                                                 <md-expansion-panel-footer>
                                                                                                     <div flex></div>
-                                                                                                    <md-button class="md-primary" href="http://localhost:8080/apis/file/{{progress.fileMetadata.fileID}}" ng-if='progress.fileMetadata != null'>
+                                                                                                    <md-button class="md-primary" href="http://localhost:8080/apis/file/{{progress.fileMetadata.fileID}}" ng-disabled='progress.fileMetadata == null'>
                                                                                                         Download Proof
                                                                                                     </md-button>
                                                                                                     <md-button class="md-warn" ng-click="$panel.collapse()">Collapse</md-button>
@@ -250,7 +250,8 @@
                                             <md-expansion-panel-footer>
                                                 <div flex></div>
                                                 <md-button class="md-primary" 
-                                                    ng-click="showCreateNewJournalDialog($event,processed.plannedID,processed.supervisionID)">
+                                                    ng-click="showCreateNewJournalDialog($event,processed.plannedID,processed.supervisionID)"
+                                                    ng-disabled="processed.plannedNoJournal <= processed.journals.length">
                                                     New Journal
                                                 </md-button>
                                                 <md-button class="md-warn" ng-click="$panel.collapse()">Collapse</md-button>
