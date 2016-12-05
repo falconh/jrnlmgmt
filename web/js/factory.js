@@ -175,15 +175,17 @@ angular.module('myApp.factory',[])
 }])
 .factory('JournalProgress', ['$http', '$q', function($http, $q){
 	return {
-		callPostAPI : function(tempStatus, tempDescription, tempFile, tempPlannedID, tempJournalID){
+		callPostAPI : function(tempStatus, tempDescription, tempFile, tempPlannedID, tempJournalID, tempQuartileRank, tempImpactFactor){
 
-			console.log(tempStatus, tempDescription, tempFile, tempPlannedID, tempJournalID);
+			console.log(tempStatus, tempDescription, tempFile, tempPlannedID, tempJournalID, tempQuartileRank, tempImpactFactor);
 
 			var fd = new FormData();
 			fd.append('plannedID', tempPlannedID);
 			fd.append('journalID', tempJournalID);
 			fd.append('status', tempStatus);
 			fd.append('description', tempDescription);
+			fd.append('quartileRank', tempQuartileRank);
+			fd.append('impactFactor', tempImpactFactor);
 			angular.forEach(tempFile, function(obj){
 				fd.append('progressProof', obj.lfFile);
 			});
@@ -215,6 +217,118 @@ angular.module('myApp.factory',[])
 						{
 							method: 'GET',
 							url: 'http://localhost:8080/apis/file/' + fileID
+
+						}
+					)
+					.then(
+						function successCallBack(response){
+							return response;
+						},
+						function errorCallBack(response){
+							return response;
+						}
+					);
+		}
+	};
+}])
+.factory('MonthlyProgress', ['$http', '$q', function($http, $q){
+	return {
+		callGetAPI : function(userIDs){
+
+			console.log(userIDs);
+
+			return $http(
+						{
+							method: 'GET',
+							url: 'http://localhost:8080/report/monthlyprogress?userID=' + userIDs
+
+						}
+					)
+					.then(
+						function successCallBack(response){
+							return response;
+						},
+						function errorCallBack(response){
+							return response;
+						}
+					);
+		}
+	};
+}])
+.factory('Department', ['$http', '$q', function($http, $q){
+	return {
+		callGetAPI : function(){
+
+			return $http(
+						{
+							method: 'GET',
+							url: 'http://localhost:8080/report/departments'
+
+						}
+					)
+					.then(
+						function successCallBack(response){
+							return response;
+						},
+						function errorCallBack(response){
+							return response;
+						}
+					);
+		}
+	};
+}])
+.factory('User', ['$http', '$q', function($http, $q){
+	return {
+		callGetAPI : function(departments){
+
+			return $http(
+						{
+							method: 'GET',
+							url: 'http://localhost:8080/report/users?department=' + departments
+
+						}
+					)
+					.then(
+						function successCallBack(response){
+							return response;
+						},
+						function errorCallBack(response){
+							return response;
+						}
+					);
+		}
+	};
+}])
+.factory('SingleUser', ['$http', '$q', function($http, $q){
+	return {
+		callGetAPI : function(userID){
+
+			return $http(
+						{
+							method: 'GET',
+							url: 'http://localhost:8080/apis/users/' + userID
+
+						}
+					)
+					.then(
+						function successCallBack(response){
+							return response;
+						},
+						function errorCallBack(response){
+							return response;
+						}
+					);
+		}
+	};
+}])
+.factory('ReportJournal', ['$http', '$q', function($http, $q){
+	return {
+		callGetAPI : function(userIDs){
+
+			return $http(
+						{
+							method: 'GET',
+							url: 'http://localhost:8080/report/journals?userID=' + userIDs
 
 						}
 					)

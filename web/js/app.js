@@ -1,9 +1,11 @@
 'use strict';
 angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
-    'ngMaterialSidemenu','material.components.expansionPanels', 'lfNgMdFileInput'])
+    'ngMaterialSidemenu','material.components.expansionPanels', 'lfNgMdFileInput', 'chart.js'])
 .config(function($mdThemingProvider){
     $mdThemingProvider.theme('default')
-    .primaryPalette('blue')
+    .primaryPalette('purple',{
+        'default': '800'
+    })
     .accentPalette('pink');
 })
 .run(function($rootScope){
@@ -62,9 +64,10 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
     };
 }])
 .controller('MainDisplayCtrl', ['$scope', '$mdSidenav', '$mdDialog','$rootScope','$state',
-    '$stateParams','PlannedJournal','Journal','Supervision', 'File', 'SharedData', 
+    '$stateParams','PlannedJournal','Journal','Supervision', 'File', 'Department', 'User', 
+    'MonthlyProgress', 'ReportJournal', 'SingleUser', 'SharedData', 
     function($scope, $mdSidenav, $mdDialog, $rootScope, $state, $stateParams, 
-        PlannedJournal, Journal, Supervision, File, SharedData){
+        PlannedJournal, Journal, Supervision, File, Department, User, MonthlyProgress, ReportJournal, SingleUser, SharedData){
 
     console.log(SharedData);
 
@@ -101,6 +104,16 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
         return plannedJournals;
     };
 
+    $scope.activateProgressView = function(){
+        $scope.viewProgress = true;
+        $scope.viewDashboard = false;
+    }
+
+    $scope.activateDashboardView = function(){
+        $scope.viewProgress = false;
+        $scope.viewDashboard = true;
+    }
+
     var addJournals = function(plannedjournals,$scope){
 
 
@@ -121,6 +134,25 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
             }
         }
         return tempProcessedPlannedJournals;
+    }
+
+    $scope.callSingleUserGetAPI = function(userID){
+
+
+        SingleUser
+            .callGetAPI(userID)
+            .then(
+                function successCallBack(response){
+                    
+                    if(response.status == 200){
+                        $scope.selectedUser = response.data;
+                    }
+                },
+                function errorCallBack(response){
+
+                }
+            );
+
     }
 
     $scope.callPlannedJournalsGetAPI = function(supervisionIDs){
@@ -211,6 +243,7 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
     
 
     $scope.callSupervisionsGetAPI($scope.userID);
+    $scope.callSingleUserGetAPI($scope.userID);
     
 
     $scope.months = [
@@ -219,6 +252,7 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
         'March',
         'April',
         'May',
+        'June',
         'July',
         'August',
         'September',
@@ -299,6 +333,155 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
 
             });
     }
+
+
+    //Charts
+    //
+    $scope.monthProgressLabels = $scope.months;
+    $scope.monthProgressSeries = ['Accepted', 'Incomplete'];
+    $scope.monthProgressData = [];
+
+    $scope.quartileRankLabels = [];
+    $scope.quartileRankSeries = ['Q1', 'Q2', 'Q3', 'Q4'];
+    $scope.quartileRankData = [];
+
+
+    for(var i in $scope.monthProgressSeries){
+        var tempData = [];
+
+        for(var j in $scope.monthProgressLabels){
+            tempData.push(0);
+        }
+        $scope.monthProgressData.push(tempData);
+    }
+
+    $scope.callDepartmentGetAPI = function(){
+        Department
+            .callGetAPI()
+            .then(
+                function successCallBack(response){
+
+                        if(response.status == 200){
+
+                            var departmentList = [];
+
+                            for(var tempDepartment in response.data){
+                                departmentList.push(response.data[tempDepartment].departments);
+                            }
+
+                            $scope.quartileRankLabels = departmentList;
+
+                            for(var i in $scope.quartileRankSeries){
+                                var tempData = [];
+
+                                for(var j in $scope.quartileRankLabels){
+                                    tempData.push(0);
+                                }
+                                $scope.quartileRankData.push(tempData);
+                            }
+
+                            $scope.callUserGetAPI(departmentList);
+                        }
+                    
+                    },
+                    function errorCallBack(response){
+
+                    }
+
+            );
+    };
+
+    $scope.callUserGetAPI = function(departments){
+        User
+            .callGetAPI(departments)
+            .then(
+                function successCallBack(response){
+
+                        if(response.status == 200){
+
+                            var userList = [];
+
+                            $scope.users = response.data;
+
+                            for(var tempUser in response.data){
+                                userList.push(response.data[tempUser].userID);
+                            }
+
+                            console.log("userList : " + userList);
+
+                            $scope.callMonthlyProgressGetAPI(userList);
+                            $scope.callReportJournalGetAPI(userList);
+                        }
+                    
+                    },
+                    function errorCallBack(response){
+
+                    }
+
+            )
+    }
+
+    $scope.callMonthlyProgressGetAPI = function(userIDs){
+        MonthlyProgress
+            .callGetAPI(userIDs)
+            .then(
+                function successCallBack(response){
+
+                        if(response.status == 200){
+
+                            for(var month in $scope.months){
+                                var tempProgressMonth = response.data[$scope.months[month]];
+                                for(var progress in tempProgressMonth){
+                                    if(tempProgressMonth[progress].status == "Incomplete"){
+                                        $scope.monthProgressData[1][month]++;
+                                    }
+                                    else if(tempProgressMonth[progress].status == "Accepted"){
+                                        $scope.monthProgressData[0][month]++;
+                                    }
+                                }
+                            }
+                            console.log($scope.monthProgressData);
+                        }
+                    
+                    },
+                    function errorCallBack(response){
+
+                    }
+
+            );
+
+    };
+
+    $scope.callReportJournalGetAPI = function(userIDs){
+        ReportJournal
+            .callGetAPI(userIDs)
+            .then(
+                function successCallBack(response){
+
+                        if(response.status == 200){
+
+                            for(var journal in response.data){
+                                var tempJournal = response.data[journal];
+                                for(var user in $scope.users){
+                                    var tempUser = $scope.users[user];
+                                    if(tempUser.userID == tempJournal.userID){
+                                        $scope.quartileRankData[$scope.quartileRankSeries.indexOf(tempJournal.quartileRank)][$scope.quartileRankLabels.indexOf(tempUser.userDepartment)]++;
+                                    }
+                                }
+                            }
+                            
+                        }
+                    
+                    },
+                    function errorCallBack(response){
+
+                    }
+
+            );
+
+    };
+
+    $scope.callDepartmentGetAPI();
 
 
 }])
@@ -416,12 +599,6 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
 
         $scope.plannedID = plannedID;
         $scope.supervisionID = supervisionID;
-        $scope.quartileRanks = [
-            'Q1',
-            'Q2',
-            'Q3',
-            'Q4'
-        ];
 
         
         $scope.hide = function() {
@@ -443,8 +620,6 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
                 journalName : $scope.journalName,
                 paperName : $scope.paperName,
                 authors: $scope.authors,
-                quartileRank : $scope.selectedQuartileRank,
-                impactFactor: $scope.impactFactor,
                 plannedID : $scope.plannedID
             };
 
@@ -485,6 +660,13 @@ controller('CreateNewStatusDialogController', function(JournalProgress, plannedI
             'Rejection'
         ];
 
+
+        $scope.quartileRanks = [
+            'Q1',
+            'Q2',
+            'Q3',
+            'Q4'
+        ];
         
         $scope.hide = function() {
             $mdDialog.hide();
@@ -501,9 +683,11 @@ controller('CreateNewStatusDialogController', function(JournalProgress, plannedI
         $scope.submit = function(){
 
             console.log($scope.progressProof[0]);
+            console.log($scope);
 
             JournalProgress
-            .callPostAPI($scope.selectedStatus, $scope.description, $scope.progressProof, $scope.plannedID, $scope.journalID)
+            .callPostAPI($scope.selectedStatus, $scope.description, $scope.progressProof, 
+                $scope.plannedID, $scope.journalID, $scope.selectedQuartileRank, $scope.impactFactor)
             .then(
                 function successCallBack(response){
 

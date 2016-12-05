@@ -20,6 +20,7 @@
     "angular-ui-router": "^0.3.1",
     "angular-material-sidemenu": "^1.0.1",
     "angular-material-expansion-panel": "^0.7.0",
-    "lf-ng-md-file-input": "^1.4.8"
+    "lf-ng-md-file-input": "^1.4.8",
+    "angular-chart.js": "^1.0.3"
   }
 }

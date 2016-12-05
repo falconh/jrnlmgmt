@@ -16,27 +16,33 @@
             flex='25'>
             <md-sidemenu>
             <md-sidemenu-group>
-                <md-sidemenu-content md-icon="people" md-heading="Supervision" md-arrow="true">
+                <md-sidemenu-content md-icon="people" md-heading="Supervision" md-arrow="true" ng-click="activateProgressView()">
                     <md-sidemenu-button ng-repeat="supervision in supervisions" 
                         ng-click="callPlannedJournalsGetAPI(supervision.supervisionID)">
                         <md-icon class="material-icons">face</md-icon>
                         {{supervision.student.studentName}}
                     </md-sidemenu-button>
-                    <md-sidemenu-button ng-click="callSupervisionsGetAPI(userID)" ng-if="supervisions.length > 0">
+                    <md-sidemenu-button ng-click="callSupervisionsGetAPI(userID)" ng-show="supervisions.length > 0">
                         <md-icon class="material-icons">face</md-icon>
                         All
                     </md-sidemenu-button>
                     <md-sidemenu-button ng-click=showCreateStudentDialog($event)>
-                        <md-icon md-font-icon="material-icons">create</md-icon>
+                        <md-icon md-font-icon="material-icons">group add</md-icon>
                         <span style="font-weight:bolder">Create new supervision</span>
                     </md-sidemenu-button>
                 </md-sidemenu-content>
             </md-sidemenu-group>
             <md-divider></md-divider>
+            <md-button ng-click="activateDashboardView()" ng-show='selectedUser.userRole == 1'>
+                <md-icon md-font-icon="material-icons">dashboard</md-icon>
+                Reports
+            </md-button>
             </md-sidemenu>
         </md-sidenav>
 
         <div layout="column" flex>
+
+        <div layout="column" ng-show="viewProgress" flex>
 
                 <md-button class="md-accent md-fab md-fab-bottom-right" ng-click="showCreateJournalPlanDialog($event)" 
                     style="position:fixed !important;" aria-label="description" md-ripple-size="full">
@@ -47,7 +53,7 @@
                 </md-button>
 
                 <md-content layout-padding flex>
-                    <md-expansion-panel ng-repeat="(key, month) in months" ng-if="processedPlannedJournals[month].length != 0" flex>
+                    <md-expansion-panel ng-repeat="(key, month) in months" ng-show="processedPlannedJournals[month].length != 0" flex>
                         <md-expansion-panel-collapsed>
                             <div class="md-title">{{month}}</div>
                             <div class="md-summary">Number of plan : {{processedPlannedJournals[month].length}}</div>
@@ -237,7 +243,7 @@
                                                             <md-expansion-panel-footer>
                                                                 <div flex></div>
                                                                 <md-button class="md-primary"
-                                                                    ng-click="showCreateNewStatusDialog($event,processed.plannedID,journal.journalID,processed.supervisionID)">
+                                                                    ng-click="showCreateNewStatusDialog($event,processed.plannedID,journal.journalID,processed.supervisionID)" ng-disabled="journal.progress[0].status.toUpperCase() == 'ACCEPTED'">
                                                                     Update Status
                                                                 </md-button>
                                                                 <md-button class="md-warn" ng-click="$panel.collapse()">Collapse</md-button>
@@ -267,6 +273,39 @@
                         </md-expansion-panel-expanded>
                     </md-expansion-panel>
                 </md-content>
+        </div>
+
+        <div layout="column" ng-show="viewDashboard" flex>
+
+            <md-card>
+                <md-toolbar>
+                    <div class="md-toolbar-tools">
+                        <h2>Progress Report on Registered Plans(Monthly)</h2>
+                        <span flex></span>
+                    </div>
+                </md-toolbar>
+                <div layout-padding>
+                    <canvas id="monthProgress" class="chart chart-bar" 
+                        chart-data="monthProgressData" chart-labels="monthProgressLabels" chart-series="monthProgressSeries" flex>
+                    </canvas>
+                </div>
+            </md-card>
+
+            <md-card>
+                <md-toolbar>
+                    <div class="md-toolbar-tools">
+                        <h2>Report on Journal's QuartileRank according to Department</h2>
+                        <span flex></span>
+                    </div>
+                </md-toolbar>
+                <div layout-padding>
+                    <canvas id="quartileRank" class="chart chart-bar" 
+                        chart-data="quartileRankData" chart-labels="quartileRankLabels" chart-series="quartileRankSeries" flex>
+                    </canvas>
+                </div>
+            </md-card>
+            
+        </div>
         </div>
     </div>
 </div>

@@ -18,7 +18,8 @@ var progressProofUpload = multer({storage : progressProofStorage}).fields([
         maxCount : 1
     }
 ]);
-var router = express.Router(); 
+var router = express.Router();
+var reportRouter = express.Router();
 var server = require('http').Server(app);
 var serverPort = 8080 ;
 var mysql = require('mysql');
@@ -118,7 +119,7 @@ var User = sequelize.define('USR_TBL', {
 
 var Supervision = sequelize.define('SPRVISE_TBL', {
     supervisionID : {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING,
         field: 'SPRVISE_ID',
         primaryKey: true,
         autoIncrement: true
@@ -470,8 +471,6 @@ router.route('/journals')
     var tempJournalName = req.body.journalName;
     var tempPaperName = req.body.paperName;
     var tempAuthors = req.body.authors;
-    var tempQuartileRank = req.body.quartileRank;
-    var tempImpactFactor = req.body.impactFactor;
     var tempPlannedID = req.body.plannedID;
 
     Journal.findOrCreate(
@@ -481,11 +480,7 @@ router.route('/journals')
                 paperName : tempPaperName,
                 authors : tempAuthors 
             },
-            attributes: {exclude : ['JRNL_ID']},
-            defaults:{
-                quartileRank : tempQuartileRank,
-                impactFactor : parseFloat(tempImpactFactor)
-            }
+            attributes: {exclude : ['JRNL_ID']}
         }
     ).spread(function(journals,created){
 
@@ -688,6 +683,15 @@ router.route('/journals/:journalID')
     });
 });
 
+router.route('/users/:userID')
+.get(function(req, res){
+    var tempUserID = req.params.userID;
+
+    User.findById(parseInt(tempUserID)).then(function(user){
+        res.json(user);
+    });
+})
+
 router.route('/journalprogress')
 .post(function(req,res){
     progressProofUpload(req, res, function(err){
@@ -707,7 +711,25 @@ router.route('/journalprogress')
             var tempJournalID = req.body.journalID ;
             var tempDescription = req.body.description ;
             var tempStatus = req.body.status;
+            var tempQuartileRank = req.body.quartileRank;
+            var tempImpactFactor = req.body.impactFactor;
             var tempFile = req.files['progressProof'][0];
+
+            console.log(tempQuartileRank + " " + tempImpactFactor);
+
+            if(tempStatus.toUpperCase() == "ACCEPTED"){
+                if(!tempQuartileRank || !tempImpactFactor){
+                    var errorRes = {
+                        error : {
+                            code : '400',
+                            message : 'Missing quartileRank || impactFactor'
+                        }
+                    };
+
+                    res.status(400).json(errorRes);
+                    next();
+                }
+            }
 
             console.log(tempFile);
 
@@ -726,7 +748,38 @@ router.route('/journalprogress')
                         })
                         .save()
                         .then(function(createdJournalProgress){
-                            res.status(201).json(createdJournalProgress);
+
+                            console.log(tempStatus.toUpperCase());
+
+                            if(tempStatus.toUpperCase() == "ACCEPTED"){
+
+                                console.log(tempStatus.toUpperCase());
+
+                                Journal
+                                    .update({
+                                        quartileRank: tempQuartileRank,
+                                        impactFactor: parseFloat(tempImpactFactor)
+                                    }, {
+                                        where : {
+                                            journalID : tempJournalID
+                                        }
+                                    })
+                                    .then(function(updatedJournal){
+                                        res.status(201).json(createdJournalProgress);
+                                    })
+                                    .catch(function(error){
+                                        var errorRes = {
+                                            error : {
+                                                code : '500',
+                                                message : 'Failed to update journal'
+                                            }
+                                        };
+
+                                        console.log(error);
+
+                                        res.status(500).json(errorRes);
+                                    });
+                                }
                         })
                         .catch(function(error){
                             var errorRes = {
@@ -793,6 +846,213 @@ router.route('/file/:fileID')
 });
 
 app.use('/apis', router);
+
+reportRouter.route('/departments')
+.get(function(req, res){
+    sequelize.query("SELECT DISTINCT USR_DEPTMNT AS departments FROM USR_TBL", { type : Sequelize.QueryTypes.SELECT})
+    .then(function(departments){
+        console.log(departments);
+
+        res.status(200).json(departments);
+    })
+    .catch(function(error){
+        var errorRes = {
+            error: {
+                code : '500',
+                message : 'Internal Server Error'
+            }
+        };
+
+        res.status(500).json(errorRes);
+    });
+});
+
+reportRouter.route('/users')
+.get(function(req, res){
+    var tempDepartments = req.query.department.split(',');
+
+    User.findAll({
+        where:{
+            userDepartment: tempDepartments
+        }
+    })
+    .then(function(users){
+        res.status(200).json(users);
+    })
+    .catch(function(error){
+        var errorRes = {
+            error: {
+                code : '500',
+                message : 'Internal Server Error'
+            }
+        };
+
+        res.status(500).json(errorRes);
+    });
+})
+
+reportRouter.route('/monthlyprogress')
+.get(function(req, res){
+    var tempUserID = req.query.userID.split(',');
+
+    Supervision.findAll({
+        attributes: [['SPRVISE_ID', 'supervisionID']],
+        where : {
+            userID : tempUserID
+        }
+    })
+    .then(function(supervisionIDs){
+        var tempSupervisionIDs = [];
+
+        for(var supervisionID in supervisionIDs){
+            tempSupervisionIDs.push(supervisionIDs[supervisionID].get({plain: true}).supervisionID);
+        }
+
+
+        PlannedJournals.findAll({
+            attributes: [['JRNLPLN_ID', 'plannedID'],['JRNLPLN_DATE', 'plannedDate']],
+            where: {
+                supervisionID : tempSupervisionIDs
+            }
+        })
+        .then(function(plannedJournalIDs){
+
+            var tempPlannedJournalIDs = [];
+
+            for(var plannedJournalID in plannedJournalIDs){
+                tempPlannedJournalIDs.push(plannedJournalIDs[plannedJournalID].get({plain: true}).plannedID);
+            }
+
+            JournalProgress.findAll({
+                attributes: [['JRNLPRGSS_CREATED_DATE','createdDate'],['JRNLPRGSS_STATUS', 'status'],['JRNLPRGSS_JRNLPLN_ID','plannedID']],
+                where:{
+                    plannedID: tempPlannedJournalIDs,
+                    status : ['Incomplete', 'Accepted']
+                }
+            })
+            .then(function(journalProgresses){
+                var resStructure = {};
+
+                for(var month in months){
+                    resStructure[months[month]] = [];
+                }
+
+                for(var journalProgress in journalProgresses){
+                    var tempJournalProgress = journalProgresses[journalProgress].get({plain: true});
+
+                    for(var plannedJournal in plannedJournalIDs){
+                        var tempPlannedJournal = plannedJournalIDs[plannedJournal].get({plain: true});
+                        if(tempJournalProgress.plannedID == tempPlannedJournal.plannedID){
+                            var tempMonth = new Date(tempPlannedJournal.plannedDate).getMonth();
+                            resStructure[months[tempMonth]].push(tempJournalProgress);
+                            break;
+                        }
+                    }
+                }
+
+                res.status(200).json(resStructure);
+
+            });
+        });
+    });
+});
+
+reportRouter.route('/journals')
+.get(function(req, res){
+    var tempUserID = req.query.userID.split(',');
+
+    Supervision.findAll({
+        attributes: [['SPRVISE_ID', 'supervisionID'], ['SPRVISE_USR_ID', 'userID']],
+        where : {
+            userID : tempUserID
+        }
+    })
+    .then(function(supervisionIDs){
+        var tempSupervisionIDs = [];
+
+        for(var supervisionID in supervisionIDs){
+            tempSupervisionIDs.push(supervisionIDs[supervisionID].get({plain: true}).supervisionID);
+        }
+
+
+        PlannedJournals.findAll({
+            attributes: [['JRNLPLN_ID', 'plannedID'], ['JRNLPLN_SPRVISE_ID', 'supervisionID']],
+            where: {
+                supervisionID : tempSupervisionIDs
+            }
+        })
+        .then(function(plannedJournalIDs){
+
+            var tempPlannedJournalIDs = [];
+
+            for(var plannedJournalID in plannedJournalIDs){
+                tempPlannedJournalIDs.push(plannedJournalIDs[plannedJournalID].get({plain: true}).plannedID);
+            }
+
+            JournalProgress.findAll({
+                attributes: [['JRNLPRGSS_JRNL_ID','journalID'],['JRNLPRGSS_JRNLPLN_ID','plannedID']],
+                where:{
+                    plannedID: tempPlannedJournalIDs,
+                    status : ['Accepted']
+                }
+            })
+            .then(function(journalProgresses){
+
+                var journalIDs = [];
+
+                for(var journalProgress in journalProgresses){
+                    journalIDs.push(journalProgresses[journalProgress].get({plain: true}).journalID);
+                }
+
+                Journal.findAll({
+                    where:{
+                        journalID: journalIDs
+                    }
+                })
+                .then(function(journals){
+
+                    var resStructure = [];
+
+                    for(var journalProgress in journalProgresses){
+                        var tempJournalProgress = journalProgresses[journalProgress].get({plain: true});
+
+                        for(var journal in journals){
+                            var tempJournal = journals[journal].get({plain: true});
+
+                            if(tempJournal.journalID == tempJournalProgress.journalID){
+                                for(var plannedJournal in plannedJournalIDs){
+                                    var tempPlannedJournal = plannedJournalIDs[plannedJournal].get({plain: true});
+                                    if(tempJournalProgress.plannedID == tempPlannedJournal.plannedID){
+                                        for(var supervision in supervisionIDs){
+                                            var tempSupervision = supervisionIDs[supervision].get({plain: true});
+                                            if(tempSupervision.supervisionID == tempPlannedJournal.supervisionID){
+                                                tempJournal['userID'] = tempSupervision.userID;
+                                                resStructure.push(tempJournal);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+
+                    console.log(resStructure);
+
+                    res.status(200).json(resStructure);
+
+                });
+
+            });
+        });
+    });
+
+
+})
+
+app.use('/report', reportRouter);
+
 
 server.listen(serverPort);
 console.log("Server listening at port " + serverPort);

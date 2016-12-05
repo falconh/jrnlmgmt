@@ -23,18 +23,39 @@
                     </md-input-container>
 
                     <md-input-container class="md-block">
-                        <label>Progress Proof</label>
-                        <br>
-                        <lf-ng-md-file-input lf-files="progressProof" aria-label="fileupload"></lf-ng-md-file-input>
-                    </md-input-container>
-
-                    <md-input-container class="md-block">
                         <label>Description</label>
                         <textarea ng-model='description' name='description' md-maxlength="250" rows="3" md-select-on-focus>
                         </textarea>
                         <div ng-messages="newStatusForm.description.$error">
                             <div ng-message='required'>This is required.</div>
                         </div>
+                    </md-input-container>
+
+                    <div layout="row">
+                        <md-input-container class="md-block" flex="50" ng-show="selectedStatus.toUpperCase() == 'ACCEPTED'">
+                            <label>Impact Factor</label>
+                            <input ng-model='impactFactor' required>
+                            <div ng-messages="newStatusForm.impactFactor.$error">
+                                <div ng-message='required'>This is required.</div>
+                            </div>
+                        </md-input-container>
+
+                        <md-input-container class="md-block" flex="50" ng-show="selectedStatus.toUpperCase() == 'ACCEPTED'">
+                            <label>Quartile Rank</label>
+                            <md-select ng-model='selectedQuartileRank' required>
+                                <md-option ng-value="quartileRank" ng-repeat="quartileRank in quartileRanks">
+                                    {{quartileRank}}
+                                </md-option>
+                            <div ng-messages="newStatusForm.quartileRank.$error">
+                                <div ng-message='required'>This is required.</div>
+                            </div>
+                        </md-input-container>
+                   </div>
+
+                    <md-input-container class="md-block">
+                        <label>Progress Proof</label>
+                        <br>
+                        <lf-ng-md-file-input lf-files="progressProof" aria-label="fileupload"></lf-ng-md-file-input>
                     </md-input-container>
 
 
