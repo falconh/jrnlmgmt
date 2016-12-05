@@ -780,6 +780,9 @@ router.route('/journalprogress')
                                         res.status(500).json(errorRes);
                                     });
                                 }
+                                else{
+                                   res.status(201).json(createdJournalProgress); 
+                                }
                         })
                         .catch(function(error){
                             var errorRes = {

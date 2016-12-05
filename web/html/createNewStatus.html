@@ -34,7 +34,7 @@
                     <div layout="row">
                         <md-input-container class="md-block" flex="50" ng-show="selectedStatus.toUpperCase() == 'ACCEPTED'">
                             <label>Impact Factor</label>
-                            <input ng-model='impactFactor' required>
+                            <input ng-model='impactFactor'>
                             <div ng-messages="newStatusForm.impactFactor.$error">
                                 <div ng-message='required'>This is required.</div>
                             </div>
@@ -42,7 +42,7 @@
 
                         <md-input-container class="md-block" flex="50" ng-show="selectedStatus.toUpperCase() == 'ACCEPTED'">
                             <label>Quartile Rank</label>
-                            <md-select ng-model='selectedQuartileRank' required>
+                            <md-select ng-model='selectedQuartileRank'>
                                 <md-option ng-value="quartileRank" ng-repeat="quartileRank in quartileRanks">
                                     {{quartileRank}}
                                 </md-option>
