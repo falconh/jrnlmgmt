@@ -35,7 +35,7 @@
             <md-divider></md-divider>
             <md-button ng-click="activateDashboardView()" ng-show='selectedUser.userRole == 1'>
                 <md-icon md-font-icon="material-icons">dashboard</md-icon>
-                Reports
+                <center>Reports</center>
             </md-button>
             </md-sidemenu>
         </md-sidenav>
@@ -275,37 +275,87 @@
                 </md-content>
         </div>
 
-        <div layout="column" ng-show="viewDashboard" flex>
+        <div layout="row" ng-show="viewDashboard" flex>
 
-            <md-card>
-                <md-toolbar>
-                    <div class="md-toolbar-tools">
-                        <h2>Progress Report on Registered Plans(Monthly)</h2>
-                        <span flex></span>
-                    </div>
-                </md-toolbar>
-                <div layout-padding>
-                    <canvas id="monthProgress" class="chart chart-bar" 
-                        chart-data="monthProgressData" chart-labels="monthProgressLabels" chart-series="monthProgressSeries" flex>
-                    </canvas>
-                </div>
-            </md-card>
+            <div flex>
 
-            <md-card>
-                <md-toolbar>
-                    <div class="md-toolbar-tools">
-                        <h2>Report on Journal's QuartileRank according to Department</h2>
-                        <span flex></span>
+                <md-card>
+                    <md-toolbar>
+                        <div class="md-toolbar-tools">
+                            <h2>Overall monthly progress</h2>
+                            <span flex></span>
+                        </div>
+                    </md-toolbar>
+                    <div layout-padding>
+                        <canvas id="monthProgressChart" class="chart chart-bar" 
+                            chart-data="monthProgressData" chart-labels="monthProgressLabels" chart-series="monthProgressSeries"
+                            chart-options="monthProgressOptions" flex>
+                        </canvas>
                     </div>
-                </md-toolbar>
-                <div layout-padding>
-                    <canvas id="quartileRank" class="chart chart-bar" 
-                        chart-data="quartileRankData" chart-labels="quartileRankLabels" chart-series="quartileRankSeries" flex>
-                    </canvas>
-                </div>
-            </md-card>
+                </md-card>
+
+                <md-card>
+                    <md-toolbar>
+                        <div class="md-toolbar-tools">
+                            <h2>Status</h2>
+                            <span flex></span>
+                        </div>
+                    </md-toolbar>
+                    <div layout-padding>
+                        <canvas id="statusChart" class="chart chart-bar" 
+                            chart-data="statusData" chart-labels="statusLabels" chart-series="statusSeries" chart-options="statusOptions"flex>
+                        </canvas>
+                    </div>
+                </md-card>
+
+
+
+                <md-card>
+                    <md-toolbar>
+                        <div class="md-toolbar-tools">
+                            <h2>QuartileRank</h2>
+                            <span flex></span>
+                        </div>
+                    </md-toolbar>
+                    <div layout-padding>
+                        <canvas id="quartileRankChart" class="chart chart-bar" 
+                            chart-data="quartileRankData" chart-labels="quartileRankLabels" chart-series="quartileRankSeries"
+                            chart-options="quartileRankOptions" flex>
+                        </canvas>
+                    </div>
+                </md-card>
+            </div>
+
+            <md-sidenav class="md-sidenav-right maximumHeight"
+                md-component-id="right" 
+                md-is-locked-open="$mdMedia('gt-md')"
+                ng-show="true"
+                flex='30'
+                layout-padding>
+
+                <form name="dashboardForm" ng-submit="dashboardSubmit()">
+                    <md-input-container class="md-block">
+                        <label>Department</label>
+                        <md-select ng-model='selectedDepartment' name='selectedDepartment' required>
+                            <md-option ng-value="department">
+                                All
+                            </md-option>
+                            <md-option ng-value="department" ng-repeat="department in departments">
+                                {{department}}
+                            </md-option>
+                        </md-select>
+                    </md-input-container>
+
+                    <div>
+                        <md-button class="md-raised md-primary" id='dashboardSearchButton' type="submit">Search</md-button>
+                    </div>
+
+                </form>
+                
+            </md-sidenav>
             
         </div>
+
         </div>
     </div>
 </div>

@@ -23,7 +23,7 @@ var reportRouter = express.Router();
 var server = require('http').Server(app);
 var serverPort = 8080 ;
 var mysql = require('mysql');
-var sequelize = new Sequelize('jrnlmgmt', 'root', '', {
+var sequelize = new Sequelize('jrnlmgmt', 'root', 'TestUser123', {
     host: 'localhost',
     dialect: 'mysql',
 
@@ -102,6 +102,10 @@ var User = sequelize.define('USR_TBL', {
     userPassword:{
         type: Sequelize.STRING,
         field: 'USR_PASSWD'
+    },
+    userName:{
+        type: Sequelize.STRING,
+        field: 'USR_NM' 
     },
     userDepartment:{
         type: Sequelize.STRING,
@@ -897,6 +901,7 @@ reportRouter.route('/users')
 reportRouter.route('/monthlyprogress')
 .get(function(req, res){
     var tempUserID = req.query.userID.split(',');
+    var tempStatus = req.query.status.split(',');
 
     Supervision.findAll({
         attributes: [['SPRVISE_ID', 'supervisionID']],
@@ -930,7 +935,7 @@ reportRouter.route('/monthlyprogress')
                 attributes: [['JRNLPRGSS_CREATED_DATE','createdDate'],['JRNLPRGSS_STATUS', 'status'],['JRNLPRGSS_JRNLPLN_ID','plannedID']],
                 where:{
                     plannedID: tempPlannedJournalIDs,
-                    status : ['Incomplete', 'Accepted']
+                    status : tempStatus
                 }
             })
             .then(function(journalProgresses){
@@ -952,6 +957,8 @@ reportRouter.route('/monthlyprogress')
                         }
                     }
                 }
+
+                console.log(resStructure);
 
                 res.status(200).json(resStructure);
 

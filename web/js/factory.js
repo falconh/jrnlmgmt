@@ -177,7 +177,6 @@ angular.module('myApp.factory',[])
 	return {
 		callPostAPI : function(tempStatus, tempDescription, tempFile, tempPlannedID, tempJournalID, tempQuartileRank, tempImpactFactor){
 
-			console.log(tempStatus, tempDescription, tempFile, tempPlannedID, tempJournalID, tempQuartileRank, tempImpactFactor);
 
 			var fd = new FormData();
 			fd.append('plannedID', tempPlannedID);
@@ -191,7 +190,6 @@ angular.module('myApp.factory',[])
 			});
 			var apiURL = 'http://localhost:8080/apis/journalprogress';
 
-			console.log(fd.getAll('progressProof'));
 
 			return $http.post(apiURL, fd, {
 						transformRequest: angular.identity,
@@ -233,14 +231,12 @@ angular.module('myApp.factory',[])
 }])
 .factory('MonthlyProgress', ['$http', '$q', function($http, $q){
 	return {
-		callGetAPI : function(userIDs){
-
-			console.log(userIDs);
+		callGetAPI : function(userIDs, status){
 
 			return $http(
 						{
 							method: 'GET',
-							url: 'http://localhost:8080/report/monthlyprogress?userID=' + userIDs
+							url: 'http://localhost:8080/report/monthlyprogress?userID=' + userIDs + "&status=" + status
 
 						}
 					)
