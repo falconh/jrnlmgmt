@@ -4,7 +4,7 @@
                     <md-button ng-click="toggleLeft()" class="md-icon-button">
                         <md-icon class="material-icons">dehaze</md-icon>
                     </md-button>
-                    <span>Journal Management System</span>
+                    <span>{{toolbarTitle}}</span>
                 </h2>
     </md-toolbar>
 
@@ -35,7 +35,7 @@
             <md-divider></md-divider>
             <md-button ng-click="activateDashboardView()" ng-show='selectedUser.userRole == 1'>
                 <md-icon md-font-icon="material-icons">dashboard</md-icon>
-                <center>Reports</center>
+                Dashboard
             </md-button>
             </md-sidemenu>
         </md-sidenav>
@@ -330,16 +330,13 @@
                 md-component-id="right" 
                 md-is-locked-open="$mdMedia('gt-md')"
                 ng-show="true"
-                flex='30'
+                flex='25'
                 layout-padding>
 
                 <form name="dashboardForm" ng-submit="dashboardSubmit()">
                     <md-input-container class="md-block">
                         <label>Department</label>
                         <md-select ng-model='selectedDepartment' name='selectedDepartment' required>
-                            <md-option ng-value="department">
-                                All
-                            </md-option>
                             <md-option ng-value="department" ng-repeat="department in departments">
                                 {{department}}
                             </md-option>

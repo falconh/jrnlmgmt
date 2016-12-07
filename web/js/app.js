@@ -105,11 +105,13 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
     };
 
     $scope.activateProgressView = function(){
+        $scope.toolbarTitle = "Journal Planning";
         $scope.viewProgress = true;
         $scope.viewDashboard = false;
     }
 
     $scope.activateDashboardView = function(){
+        $scope.toolbarTitle = "Progress Dashboard";
         $scope.viewProgress = false;
         $scope.viewDashboard = true;
     }
@@ -384,15 +386,6 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
     }
 
 
-    for(var i in $scope.monthProgressSeries){
-        var tempData = [];
-
-        for(var j in $scope.monthProgressLabels){
-            tempData.push(0);
-        }
-        $scope.monthProgressData.push(tempData);
-    }
-
     var setUpStatusWithDepartmentData = function(userIDs, labelIndex){
                             MonthlyProgress
                                 .callGetAPI(userIDs, $scope.statusSeries)
@@ -450,6 +443,35 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
                                 );
     }
 
+    var setUpQuartileRankWithDepartmentData = function(userIDs, labelIndex){
+
+        ReportJournal
+            .callGetAPI(userIDs)
+            .then(
+                function successCallBack(response){
+
+                        if(response.status == 200){
+
+                            for(var journal in response.data){
+                                var tempJournal = response.data[journal];
+                                for(var user in $scope.users){
+                                    var tempUser = $scope.users[user];
+                                    if(tempUser.userID == tempJournal.userID){
+                                        $scope.quartileRankData[$scope.quartileRankSeries.indexOf(tempJournal.quartileRank)][labelIndex]++;
+                                }
+                            }
+                            
+                        }
+                    
+                    }
+                },
+                    function errorCallBack(response){
+
+                    }
+
+            );
+    }
+
     var setUpQuartileRankWithUserData = function(userID, labelIndex){
         ReportJournal
             .callGetAPI(userID)
@@ -494,6 +516,21 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
         }
     }
 
+    var resetMonthProgress = function(){
+        $scope.monthProgressData = [];
+
+        for(var i in $scope.monthProgressSeries){
+            var tempData = [];
+
+            for(var j in $scope.monthProgressLabels){
+                tempData.push(0);
+            }
+            $scope.monthProgressData.push(tempData);
+        }
+
+
+    }
+
     var resetQuartileRank = function(){
 
         $scope.quartileRankData = [];
@@ -511,6 +548,8 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
 
     $scope.dashboardSubmit = function(){
 
+        console.log($scope.selectedDepartment);
+
         if($scope.selectedDepartment == 'All'){
             $scope.callDepartmentGetAPI();
         }
@@ -525,6 +564,8 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
             .then(
                 function successCallBack(response){
 
+                        console.log("1 1 1 ")
+
                         if(response.status == 200){
 
                             var departmentList = [];
@@ -533,20 +574,9 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
                                 departmentList.push(response.data[tempDepartment].departments);
                             }
 
-                            $scope.departments = departmentList;
+                            $scope.departments = ['All'].concat(departmentList);
 
-                            $scope.quartileRankLabels = departmentList;
-
-                            for(var i in $scope.quartileRankSeries){
-                                var tempData = [];
-
-                                for(var j in $scope.quartileRankLabels){
-                                    tempData.push(0);
-                                }
-                                $scope.quartileRankData.push(tempData);
-                            }
-
-                            $scope.callUserGetAPI(departmentList);
+                            //$scope.callUserGetAPI(departmentList);
                             $scope.setUpDashboardByDepartments(departmentList);
                         }
                     
@@ -576,7 +606,6 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
 
 
                             $scope.callMonthlyProgressGetAPI(userList);
-                            $scope.callReportJournalGetAPI(userList);
 
                         }
                     
@@ -620,74 +649,6 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
 
     };
 
-
-    $scope.setUpStatusByDepartments = function(departments){
-
-        $scope.statusLabels = departments ;
-
-        resetStatus();
-
-        for(var label in $scope.statusLabels){
-            setUpStatusWithDepartmentData($scope.statusLabels[label], label);
-        }
-    }
-
-    $scope.setUpStatusByUsers = function(department){
-
-        User
-            .callGetAPI(department)
-            .then(
-                function successCallBack(response){
-
-                    var userIDList = [];
-                    var userNameList = [];
-
-                    for(var user in response.data){
-                        userIDList.push(response.data[user].userID);
-                        userNameList.push(response.data[user].userName)
-                    }
-
-                    $scope.statusLabels = userNameList;
-
-                    resetStatus();
-
-                    for(var userID in userIDList){
-                        setUpStatusWithUserData(userIDList[userID], userID);
-                    }
-                }
-            );
-
-    }
-
-    $scope.callReportJournalGetAPI = function(userIDs){
-        ReportJournal
-            .callGetAPI(userIDs)
-            .then(
-                function successCallBack(response){
-
-                        if(response.status == 200){
-
-                            for(var journal in response.data){
-                                var tempJournal = response.data[journal];
-                                for(var user in $scope.users){
-                                    var tempUser = $scope.users[user];
-                                    if(tempUser.userID == tempJournal.userID){
-                                        $scope.quartileRankData[$scope.quartileRankSeries.indexOf(tempJournal.quartileRank)][$scope.quartileRankLabels.indexOf(tempUser.userDepartment)]++;
-                                    }
-                                }
-                            }
-                            
-                        }
-                    
-                    },
-                    function errorCallBack(response){
-
-                    }
-
-            );
-
-    };
-
     var setUpDashboardWithDepartmentData = function(department, labelIndex){
 
         User
@@ -704,6 +665,7 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
 
                         if(userList.length != 0){
                             setUpStatusWithDepartmentData(userList,labelIndex);
+                            setUpQuartileRankWithDepartmentData(userList, labelIndex);
                         }
 
                     }
@@ -723,7 +685,9 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
 
         resetStatus();
         resetQuartileRank();
+        resetMonthProgress();
 
+        $scope.callUserGetAPI(departments);
 
         for(var department in departments){
             setUpDashboardWithDepartmentData(departments[department], department);
@@ -751,6 +715,9 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
 
                     resetQuartileRank();
                     resetStatus();
+                    resetMonthProgress();
+
+                    $scope.callMonthlyProgressGetAPI(userIDList);
 
                     for(var userID in userIDList){
                         setUpQuartileRankWithUserData(userIDList[userID], userID);
@@ -761,31 +728,8 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
 
     }
 
-    $scope.setUpQuartileRankByUsers = function(department){
 
-        User
-            .callGetAPI(department)
-            .then(
-                function successCallBack(response){
-
-                    var userIDList = [];
-                    var userNameList = [];
-
-                    for(var user in response.data){
-                        userIDList.push(response.data[user].userID);
-                        userNameList.push(response.data[user].userName)
-                    }
-
-                    $scope.quartileRankLabels = userNameList;
-
-                    resetQuartileRank();
-
-                    for(var userID in userIDList){
-                        setUpQuartileRankWithUserData(userIDList[userID], userID);
-                    }
-                }
-            );
-    }
+    $scope.activateProgressView();
 
     $scope.callDepartmentGetAPI();
 
