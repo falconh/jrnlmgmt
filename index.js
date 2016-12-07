@@ -931,14 +931,31 @@ reportRouter.route('/monthlyprogress')
                 tempPlannedJournalIDs.push(plannedJournalIDs[plannedJournalID].get({plain: true}).plannedID);
             }
 
-            JournalProgress.findAll({
+            /*JournalProgress.findAll({
                 attributes: [['JRNLPRGSS_CREATED_DATE','createdDate'],['JRNLPRGSS_STATUS', 'status'],['JRNLPRGSS_JRNLPLN_ID','plannedID']],
                 where:{
                     plannedID: tempPlannedJournalIDs,
                     status : tempStatus
                 }
-            })
+            })*/
+
+            for(var status in tempStatus){
+                tempStatus[status] = '\'' + tempStatus[status] + '\'';
+            }
+
+            console.log(tempStatus);
+
+            sequelize.query("SELECT JRNLPRGSS_CREATED_DATE as createdDate, "
+                            + "JRNLPRGSS_STATUS as status, " 
+                            + "JRNLPRGSS_JRNLPLN_ID as plannedID "
+                            + "FROM jrnlmgmt.JRNLPRGSS_TBL "
+                            + "WHERE JRNLPRGSS_ID IN (SELECT MAX(JRNLPRGSS_ID) FROM jrnlmgmt.JRNLPRGSS_TBL "
+                            + "WHERE JRNLPRGSS_JRNLPLN_ID IN (" + tempPlannedJournalIDs + ") "
+                            + "AND JRNLPRGSS_STATUS IN (" + tempStatus + ") "
+                            + "GROUP BY JRNLPRGSS_JRNLPLN_ID,JRNLPRGSS_JRNL_ID);",{ type : Sequelize.QueryTypes.SELECT})
             .then(function(journalProgresses){
+
+                console.log(journalProgresses[0].createdDate);
                 var resStructure = {};
 
                 for(var month in months){
@@ -946,10 +963,10 @@ reportRouter.route('/monthlyprogress')
                 }
 
                 for(var journalProgress in journalProgresses){
-                    var tempJournalProgress = journalProgresses[journalProgress].get({plain: true});
+                    var tempJournalProgress = journalProgresses[journalProgress];//.get({plain: true});
 
                     for(var plannedJournal in plannedJournalIDs){
-                        var tempPlannedJournal = plannedJournalIDs[plannedJournal].get({plain: true});
+                        var tempPlannedJournal = plannedJournalIDs[plannedJournal];//.get({plain: true});
                         if(tempJournalProgress.plannedID == tempPlannedJournal.plannedID){
                             var tempMonth = new Date(tempPlannedJournal.plannedDate).getMonth();
                             resStructure[months[tempMonth]].push(tempJournalProgress);

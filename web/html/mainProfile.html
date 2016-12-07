@@ -3,6 +3,9 @@
                 <div class="md-toolbar-tools">
                     <md-button ng-click="toggleLeft()" class="md-icon-button">
                         <md-icon class="material-icons">dehaze</md-icon>
+                        <md-tooltip md-delay="200" md-direction="bottom" md-autohide="true">
+                            Toggle on left-sidemenu
+                        </md-tooltip>
                     </md-button>
                     <h2>
                         <span>{{toolbarTitle}}</span>
@@ -10,6 +13,9 @@
                     <span flex></span>
                     <md-button ng-click="logout()" class="md-icon-button">
                         <md-icon class="material-icons">close</md-icon>
+                        <md-tooltip md-delay="200" md-direction="bottom" md-autohide="true">
+                            Logout
+                        </md-tooltip>
                     </md-button>
                 </div>
     </md-toolbar>

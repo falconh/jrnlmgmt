@@ -622,10 +622,35 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
     }
 
     $scope.callMonthlyProgressGetAPI = function(userIDs){
-        var statusList = ['Incomplete', 'Accepted'];
 
         MonthlyProgress
-            .callGetAPI(userIDs, statusList)
+            .callGetAPI(userIDs, "Accepted")
+            .then(
+                function successCallBack(response){
+
+                        if(response.status == 200){
+
+                            for(var month in $scope.months){
+                                var tempProgressMonth = response.data[$scope.months[month]];
+                                for(var progress in tempProgressMonth){
+                                    if(tempProgressMonth[progress].status == "Accepted"){
+                                        $scope.monthProgressData[0][month]++;
+                                    }
+                        
+                                }
+                            }
+                        }
+                    
+                    },
+                    function errorCallBack(response){
+
+                    }
+
+            );
+
+
+        MonthlyProgress
+            .callGetAPI(userIDs, "Incomplete")
             .then(
                 function successCallBack(response){
 
@@ -636,9 +661,6 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
                                 for(var progress in tempProgressMonth){
                                     if(tempProgressMonth[progress].status == "Incomplete"){
                                         $scope.monthProgressData[1][month]++;
-                                    }
-                                    else if(tempProgressMonth[progress].status == "Accepted"){
-                                        $scope.monthProgressData[0][month]++;
                                     }
                                 }
                             }
