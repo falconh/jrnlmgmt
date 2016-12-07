@@ -63,15 +63,19 @@ angular.module('myApp',['ngMaterial','myApp.factory','ngMessages','ui.router',
        
     };
 }])
-.controller('MainDisplayCtrl', ['$scope', '$mdSidenav', '$mdDialog','$rootScope','$state',
+.controller('MainDisplayCtrl', ['$scope', '$location', '$mdSidenav', '$mdDialog','$rootScope','$state',
     '$stateParams','PlannedJournal','Journal','Supervision', 'File', 'Department', 'User', 
     'MonthlyProgress', 'ReportJournal', 'SingleUser', 'SharedData', 
-    function($scope, $mdSidenav, $mdDialog, $rootScope, $state, $stateParams, 
+    function($scope, $location, $mdSidenav, $mdDialog, $rootScope, $state, $stateParams, 
         PlannedJournal, Journal, Supervision, File, Department, User, MonthlyProgress, ReportJournal, SingleUser, SharedData){
 
     console.log(SharedData);
 
     $scope.sideNavIsOpen = true ;
+
+    $scope.logout = function(){
+        $location.path('/login');
+    }
 
     $scope.toggleLeft = function(){
         $scope.sideNavIsOpen = !$scope.sideNavIsOpen;

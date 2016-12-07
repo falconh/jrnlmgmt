@@ -1,11 +1,17 @@
 <div ng-controller="MainDisplayCtrl">
     <md-toolbar class="md-primary">
-                <h2 class="md-toolbar-tools">
+                <div class="md-toolbar-tools">
                     <md-button ng-click="toggleLeft()" class="md-icon-button">
                         <md-icon class="material-icons">dehaze</md-icon>
                     </md-button>
-                    <span>{{toolbarTitle}}</span>
-                </h2>
+                    <h2>
+                        <span>{{toolbarTitle}}</span>
+                    </h2>
+                    <span flex></span>
+                    <md-button ng-click="logout()" class="md-icon-button">
+                        <md-icon class="material-icons">close</md-icon>
+                    </md-button>
+                </div>
     </md-toolbar>
 
     <div class='maximumHeight' layout="row">
