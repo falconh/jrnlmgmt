@@ -19,15 +19,15 @@
                 <md-sidemenu-content md-icon="people" md-heading="Supervision" md-arrow="true" ng-click="activateProgressView()">
                     <md-sidemenu-button ng-repeat="supervision in supervisions" 
                         ng-click="callPlannedJournalsGetAPI(supervision.supervisionID)">
-                        <md-icon class="material-icons">face</md-icon>
+                        <md-icon class="material-icons">person</md-icon>
                         {{supervision.student.studentName}}
                     </md-sidemenu-button>
                     <md-sidemenu-button ng-click="callSupervisionsGetAPI(userID)" ng-show="supervisions.length > 0">
-                        <md-icon class="material-icons">face</md-icon>
+                        <md-icon class="material-icons">person</md-icon>
                         All
                     </md-sidemenu-button>
                     <md-sidemenu-button ng-click=showCreateStudentDialog($event)>
-                        <md-icon md-font-icon="material-icons">group add</md-icon>
+                        <md-icon md-font-icon="material-icons">person add</md-icon>
                         <span style="font-weight:bolder">Create new supervision</span>
                     </md-sidemenu-button>
                 </md-sidemenu-content>
